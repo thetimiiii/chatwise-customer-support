@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { WebsiteConfig } from '@/integrations/supabase/types';
 
 
+
 interface Message {
   content: string
   isUser: boolean
