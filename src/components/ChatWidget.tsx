@@ -4,22 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { HexColorPicker } from "react-colorful";
 import { WebsiteConfig } from "@/integrations/supabase/types";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatWidgetProps {
   websiteId: string;
   onClose?: () => void;
-  primaryColor?: string;
-  preamble?: string;
 }
 
-export const ChatWidget = ({ 
-  websiteId,
-  primaryColor = "#2563eb",
-  preamble = "You are a helpful customer support agent. Be concise and friendly in your responses."
-}: ChatWidgetProps) => {
-  const [color, setColor] = useState(primaryColor);
+export const ChatWidget = ({ websiteId }: ChatWidgetProps) => {
+  const [color, setColor] = useState("#2563eb");
   const [url, setUrl] = useState("");
   const [showExportCode, setShowExportCode] = useState(false);
+  const { toast } = useToast();
 
   const generateEmbedCode = () => {
     return `<!-- Lovable Chat Widget -->
@@ -33,6 +29,14 @@ export const ChatWidget = ({
     document.head.appendChild(script);
   })();
 </script>`;
+  };
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(generateEmbedCode());
+    toast({
+      title: "Code copied!",
+      description: "The embed code has been copied to your clipboard.",
+    });
   };
 
   return (
@@ -79,9 +83,7 @@ export const ChatWidget = ({
             <code>{generateEmbedCode()}</code>
           </pre>
           <Button 
-            onClick={() => {
-              navigator.clipboard.writeText(generateEmbedCode());
-            }}
+            onClick={handleCopyCode}
             className="mt-4"
           >
             Copy to Clipboard

@@ -1,28 +1,83 @@
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { MessageSquare, Users, CreditCard, TrendingUp } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Overview = () => {
+  const [credits, setCredits] = useState<number>(0);
+  const [totalChats, setTotalChats] = useState<number>(0);
+
+  useEffect(() => {
+    // Fetch initial credits
+    const fetchCredits = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('credits_remaining')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile) {
+        setCredits(profile.credits_remaining || 0);
+      }
+    };
+
+    // Fetch total chats
+    const fetchTotalChats = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { count } = await supabase
+        .from('chat_sessions')
+        .select('*', { count: 'exact' })
+        .eq('user_id', session.user.id);
+
+      setTotalChats(count || 0);
+    };
+
+    fetchCredits();
+    fetchTotalChats();
+
+    // Subscribe to real-time updates for credits
+    const channel = supabase
+      .channel('profile-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${supabase.auth.user()?.id}`
+        },
+        (payload) => {
+          if (payload.new.credits_remaining !== undefined) {
+            setCredits(payload.new.credits_remaining);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const stats = [
     {
-      title: "Chat Credits Used",
-      value: "234",
+      title: "Chat Credits Remaining",
+      value: credits.toString(),
       icon: MessageSquare,
       color: "bg-blue-100",
       iconColor: "text-blue-500"
     },
     {
-      title: "Total Users",
-      value: "1,234",
+      title: "Total Chats",
+      value: totalChats.toString(),
       icon: Users,
       color: "bg-green-100",
       iconColor: "text-green-500"
-    },
-    {
-      title: "Revenue",
-      value: "$2.4k",
-      icon: CreditCard,
-      color: "bg-purple-100",
-      iconColor: "text-purple-500"
     },
     {
       title: "Conversion Rate",
@@ -35,9 +90,9 @@ export const Overview = () => {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-8">Dashboard Overview</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {stats.map((stat) => (
           <Card key={stat.title} className="p-6">
             <div className="flex items-center gap-4">
@@ -52,6 +107,15 @@ export const Overview = () => {
           </Card>
         ))}
       </div>
+
+      {/* Demo Section */}
+      <Card className="mt-8 p-6">
+        <h2 className="text-xl font-semibold mb-4">Try the Demo</h2>
+        <p className="text-muted-foreground mb-4">
+          Test our chat widget functionality with this live demo. See how it works before implementing it on your website.
+        </p>
+        <ChatWidget websiteId="demo" />
+      </Card>
     </div>
   );
 };
