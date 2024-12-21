@@ -6,9 +6,35 @@
     preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
   };
 
+  const fetchConfig = async (websiteId, token) => {
+    try {
+      console.log('Fetching widget config from Supabase...');
+      const response = await fetch('https://ccvfjhprrjirdvkecdbp.supabase.co/rest/v1/websites', {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjdmZqaHBycmppcmR2a2VjZGJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ3ODk2MjgsImV4cCI6MjA1MDM2NTYyOH0.M4ZXMi4z_2-RZxaYyUBmrekkOsfzcPSPhvLyZomD1XY',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjdmZqaHBycmppcmR2a2VjZGJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ3ODk2MjgsImV4cCI6MjA1MDM2NTYyOH0.M4ZXMi4z_2-RZxaYyUBmrekkOsfzcPSPhvLyZomD1XY`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch config');
+      
+      const websites = await response.json();
+      const website = websites.find(w => w.id === websiteId && w.embed_token === token);
+      
+      if (!website) throw new Error('Website not found');
+      
+      console.log('Retrieved config:', website.config);
+      return website.config;
+    } catch (error) {
+      console.error('Error fetching config:', error);
+      return currentConfig; // Fallback to default config
+    }
+  };
+
   const updateConfig = (newConfig) => {
     console.log('Updating widget config:', newConfig);
     Object.assign(currentConfig, newConfig);
+    updateStyles(currentConfig);
     return currentConfig;
   };
 
@@ -91,7 +117,6 @@
       border-radius: 14px;
       font-size: 14px;
       line-height: 1.4;
-      transition: background-color 0.2s ease;
     }
 
     .lovable-message.user {
@@ -216,11 +241,9 @@
         elements.input.style.boxShadow = 'none';
       });
     }
-
-    console.log('Styles updated successfully');
   };
 
-  const initializeChat = (container) => {
+  const initializeChat = async (container, websiteId, token) => {
     console.log('Initializing chat functionality');
     
     const elements = {
@@ -308,22 +331,33 @@
       }
     });
 
+    // Listen for configuration updates from the demo widget
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'lovable-chat-config-update') {
+        console.log('Received config update:', event.data.config);
+        updateConfig(event.data.config);
+      }
+    }, false);
+
+    // Fetch initial config from Supabase
+    const config = await fetchConfig(websiteId, token);
+    updateConfig(config);
+
     return elements;
   };
 
   // Initialize widget
-  const scriptElement = document.currentScript;
-  const websiteId = scriptElement.getAttribute('data-website-id');
-  const token = scriptElement.getAttribute('data-token');
-  
-  if (!websiteId || !token) {
-    console.error('Lovable Chat Widget: Missing required attributes');
-    return;
-  }
-
-  // Initialize widget
   async function initializeWidget() {
     try {
+      const scriptElement = document.currentScript;
+      const websiteId = scriptElement.getAttribute('data-website-id');
+      const token = scriptElement.getAttribute('data-token');
+      
+      if (!websiteId || !token) {
+        console.error('Lovable Chat Widget: Missing required attributes');
+        return;
+      }
+
       // Create widget HTML
       const container = document.createElement('div');
       container.className = 'lovable-chat-widget';
@@ -348,20 +382,8 @@
 
       document.body.appendChild(container);
 
-      // Initialize chat functionality
-      initializeChat(container);
-
-      // Apply initial styles
-      updateStyles(currentConfig);
-
-      // Listen for configuration updates from the demo widget
-      window.addEventListener('message', (event) => {
-        if (event.data.type === 'lovable-chat-config-update') {
-          console.log('Received config update:', event.data.config);
-          const newConfig = updateConfig(event.data.config);
-          updateStyles(newConfig);
-        }
-      }, false);
+      // Initialize chat functionality with websiteId and token
+      await initializeChat(container, websiteId, token);
 
       console.log('Widget initialized successfully');
     } catch (error) {

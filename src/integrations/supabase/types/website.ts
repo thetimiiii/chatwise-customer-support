@@ -1,6 +1,6 @@
 import { Json } from './json';
 
-export interface WebsiteConfig extends Record<string, Json> {
+export interface WebsiteConfig {
   primaryColor: string;
   preamble: string;
 }
