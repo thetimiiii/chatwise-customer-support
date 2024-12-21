@@ -16,7 +16,7 @@ export interface Website {
   config: WebsiteConfig;
 }
 
-export const isWebsiteConfig = (value: Json): value is WebsiteConfig => {
+export const isWebsiteConfig = (value: unknown): value is WebsiteConfig => {
   if (typeof value !== 'object' || value === null) return false;
   
   const config = value as Record<string, unknown>;

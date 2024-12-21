@@ -11,6 +11,8 @@ export default function ChatWidgets() {
   const [websites, setWebsites] = useState<Website[]>([]);
   const [newWebsiteUrl, setNewWebsiteUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedWebsite, setSelectedWebsite] = useState<Website | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -73,9 +75,18 @@ export default function ChatWidgets() {
 
     setIsLoading(true);
     try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) {
+        throw new Error("Not authenticated");
+      }
+
       const { error } = await supabase
         .from("websites")
-        .insert([{ url: newWebsiteUrl }]);
+        .insert({
+          url: newWebsiteUrl,
+          name: new URL(newWebsiteUrl).hostname,
+          user_id: session.session.user.id
+        });
 
       if (error) {
         console.error("Error adding website:", error);
@@ -89,7 +100,7 @@ export default function ChatWidgets() {
         toast({
           title: "Success",
           description: "Website added successfully",
-          variant: "success",
+          variant: "default",
         });
       }
     } catch (error) {
@@ -124,7 +135,7 @@ export default function ChatWidgets() {
           toast({
             title: "Success",
             description: "Website deleted successfully",
-            variant: "success",
+            variant: "default",
           });
         }
       } catch (error) {
@@ -140,34 +151,60 @@ export default function ChatWidgets() {
     }
   };
 
+  const handleShowEmbedCode = (website: Website) => {
+    setSelectedWebsite(website);
+    setIsDialogOpen(true);
+  };
+
   return (
-    <div>
+    <div className="space-y-6">
       <h1 className="text-2xl font-bold">Chat Widgets</h1>
       <div className="flex gap-2">
         <Input
           value={newWebsiteUrl}
           onChange={(e) => setNewWebsiteUrl(e.target.value)}
           placeholder="Enter website URL"
+          disabled={isLoading}
         />
-        <Button onClick={handleAddWebsite} isLoading={isLoading}>
+        <Button 
+          onClick={handleAddWebsite} 
+          disabled={isLoading}
+        >
           Add Website
         </Button>
       </div>
-      <ul className="mt-4">
+      <ul className="mt-4 space-y-4">
         {websites.map((website) => (
-          <li key={website.id} className="flex justify-between items-center">
-            <span>{website.url}</span>
-            <Button
-              variant="destructive"
-              onClick={() => handleDeleteWebsite(website.id)}
-              isLoading={isLoading}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+          <li key={website.id} className="flex justify-between items-center p-4 bg-white rounded-lg shadow">
+            <div>
+              <h3 className="font-medium">{website.name}</h3>
+              <p className="text-sm text-gray-500">{website.url}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => handleShowEmbedCode(website)}
+                variant="outline"
+              >
+                Get Code
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => handleDeleteWebsite(website.id)}
+                disabled={isLoading}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </li>
         ))}
       </ul>
-      <EmbedCodeDialog websites={websites} />
+      {selectedWebsite && (
+        <EmbedCodeDialog
+          website={selectedWebsite}
+          open={isDialogOpen}
+          onOpenChange={setIsDialogOpen}
+        />
+      )}
     </div>
   );
-}
+};
