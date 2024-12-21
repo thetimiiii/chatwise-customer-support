@@ -31,8 +31,20 @@ export const ChatWidget = ({
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
-  // Update configuration in Supabase and notify embedded widgets
+  // Broadcast configuration changes to embedded widgets
   useEffect(() => {
+    const broadcastConfig = () => {
+      console.log('Broadcasting config update:', { primaryColor, preamble });
+      window.postMessage({
+        type: 'lovable-chat-config-update',
+        config: { primaryColor, preamble }
+      }, '*');
+    };
+
+    // Broadcast immediately when props change
+    broadcastConfig();
+
+    // Update configuration in Supabase
     const updateConfig = async () => {
       try {
         const { error } = await supabase
@@ -42,13 +54,10 @@ export const ChatWidget = ({
           })
           .eq('id', websiteId);
 
-        if (error) throw error;
-
-        // Notify embedded widgets about the configuration change
-        window.postMessage({
-          type: 'lovable-chat-config-update',
-          config: { primaryColor, preamble }
-        }, '*');
+        if (error) {
+          console.error('Error updating chat config:', error);
+          throw error;
+        }
       } catch (error) {
         console.error('Error updating chat config:', error);
       }
@@ -84,6 +93,7 @@ export const ChatWidget = ({
       <Button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-4 right-4 rounded-full h-12 w-12 p-0"
+        style={{ backgroundColor: primaryColor }}
       >
         <MessageCircle className="h-6 w-6" />
       </Button>
@@ -108,9 +118,10 @@ export const ChatWidget = ({
             <div
               className={`max-w-[80%] rounded-lg p-3 ${
                 msg.isUser
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'text-primary-foreground'
                   : 'bg-gray-100 text-gray-900'
               }`}
+              style={{ backgroundColor: msg.isUser ? primaryColor : undefined }}
             >
               {msg.content}
             </div>
@@ -132,7 +143,11 @@ export const ChatWidget = ({
             placeholder="Type your message..."
             disabled={isLoading}
           />
-          <Button type="submit" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            style={{ backgroundColor: primaryColor }}
+          >
             <Send className="h-4 w-4" />
           </Button>
         </form>

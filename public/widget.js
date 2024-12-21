@@ -52,12 +52,21 @@
 
       // Watch for configuration changes from the demo widget
       window.addEventListener('message', (event) => {
+        console.log('Received message:', event.data);
         if (event.data.type === 'lovable-chat-config-update') {
           const newConfig = event.data.config;
+          console.log('Updating widget config:', newConfig);
+          
           if (newConfig.primaryColor !== config.primaryColor) {
             styles.textContent = generateChatStyles(newConfig.primaryColor);
           }
           Object.assign(config, newConfig);
+          
+          // Update button and send button colors
+          const chatButton = container.querySelector('.lovable-chat-button');
+          const sendButton = container.querySelector('.lovable-chat-input button');
+          if (chatButton) chatButton.style.backgroundColor = newConfig.primaryColor;
+          if (sendButton) sendButton.style.backgroundColor = newConfig.primaryColor;
         }
       });
     } catch (error) {
