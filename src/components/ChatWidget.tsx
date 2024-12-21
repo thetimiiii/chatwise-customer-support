@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { MessageCircle, Send, X } from "lucide-react"
-import { supabase } from "@/integrations/supabase/client"
+import { getChatResponse } from "@/services/chatService"
 
 interface Message {
   content: string
@@ -19,7 +19,6 @@ export const ChatWidget = ({ websiteId, onClose }: ChatWidgetProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
-  const [sessionId, setSessionId] = useState<string>()
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
@@ -31,14 +30,8 @@ export const ChatWidget = ({ websiteId, onClose }: ChatWidgetProps) => {
       setMessages(prev => [...prev, { content: message, isUser: true }])
       setMessage("")
 
-      const { data, error } = await supabase.functions.invoke('chat', {
-        body: { message, websiteId, sessionId }
-      })
-
-      if (error) throw error
-
-      setSessionId(data.sessionId)
-      setMessages(prev => [...prev, { content: data.response, isUser: false }])
+      const response = await getChatResponse(message, websiteId)
+      setMessages(prev => [...prev, { content: response, isUser: false }])
     } catch (error) {
       console.error('Error sending message:', error)
       toast({
