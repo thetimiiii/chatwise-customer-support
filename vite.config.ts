@@ -32,10 +32,7 @@ export default defineConfig(({ mode }) => ({
       output: {
         entryFileNames: 'widget.bundle.js',
         chunkFileNames: 'assets/[name]-[hash].js',
-        assetFileNames: (assetInfo) => {
-          if (assetInfo.name === 'style.css') return 'widget.css';
-          return 'assets/[name]-[hash][extname]';
-        }
+        assetFileNames: 'widget.css'
       }
     }
   }
