@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChatWidget } from "@/components/ChatWidget";
 import { Website } from "@/integrations/supabase/types";
-import { Plus } from "lucide-react";
+import { Plus, X } from "lucide-react";
 
 export const ChatWidgets = () => {
   const [websites, setWebsites] = useState<Website[]>([]);
@@ -37,14 +37,28 @@ export const ChatWidgets = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Chat Widgets</h2>
-        <Button onClick={() => setSelectedWebsite(null)}>
-          <Plus className="w-4 h-4 mr-2" />
-          New Widget
-        </Button>
+        {!selectedWebsite && (
+          <Button onClick={() => setSelectedWebsite("")}>
+            <Plus className="w-4 h-4 mr-2" />
+            New Widget
+          </Button>
+        )}
       </div>
 
-      {selectedWebsite ? (
-        <ChatWidget websiteId={selectedWebsite} />
+      {selectedWebsite !== null ? (
+        <div className="relative">
+          <Button 
+            variant="ghost" 
+            className="absolute right-2 top-2"
+            onClick={() => setSelectedWebsite(null)}
+          >
+            <X className="w-4 h-4" />
+          </Button>
+          <ChatWidget 
+            websiteId={selectedWebsite} 
+            onClose={() => setSelectedWebsite(null)}
+          />
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {websites.map((website) => (

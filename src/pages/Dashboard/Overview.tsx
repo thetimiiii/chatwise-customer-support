@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
-import { MessageSquare, Users, CreditCard, TrendingUp } from "lucide-react";
+import { MessageSquare, Users, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ChatWidget } from "@/components/ChatWidget";
 
 export const Overview = () => {
   const [credits, setCredits] = useState<number>(0);
@@ -41,6 +42,9 @@ export const Overview = () => {
     fetchTotalChats();
 
     // Subscribe to real-time updates for credits
+    const { data: { session } } = supabase.auth.getSession();
+    if (!session?.user?.id) return;
+
     const channel = supabase
       .channel('profile-changes')
       .on(
@@ -49,7 +53,7 @@ export const Overview = () => {
           event: 'UPDATE',
           schema: 'public',
           table: 'profiles',
-          filter: `id=eq.${supabase.auth.user()?.id}`
+          filter: `id=eq.${session.user.id}`
         },
         (payload) => {
           if (payload.new.credits_remaining !== undefined) {

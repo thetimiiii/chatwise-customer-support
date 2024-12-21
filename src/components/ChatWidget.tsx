@@ -6,15 +6,21 @@ import { HexColorPicker } from "react-colorful";
 import { WebsiteConfig } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 
-interface ChatWidgetProps {
+export interface ChatWidgetProps {
   websiteId: string;
+  primaryColor?: string;
+  preamble?: string;
   onClose?: () => void;
 }
 
-export const ChatWidget = ({ websiteId }: ChatWidgetProps) => {
-  const [color, setColor] = useState("#2563eb");
-  const [url, setUrl] = useState("");
-  const [showExportCode, setShowExportCode] = useState(false);
+export const ChatWidget = ({ 
+  websiteId, 
+  primaryColor = "#2563eb",
+  preamble = "You are a helpful customer support agent. Be concise and friendly in your responses.",
+  onClose 
+}: ChatWidgetProps) => {
+  const [color, setColor] = useState(primaryColor);
+  const [prompt, setPrompt] = useState(preamble);
   const { toast } = useToast();
 
   const generateEmbedCode = () => {
@@ -46,17 +52,6 @@ export const ChatWidget = ({ websiteId }: ChatWidgetProps) => {
         
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Website URL</label>
-            <Input
-              type="url"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              placeholder="https://example.com"
-              className="w-full"
-            />
-          </div>
-
-          <div>
             <label className="block text-sm font-medium mb-2">Primary Color</label>
             <HexColorPicker color={color} onChange={setColor} />
             <Input
@@ -67,29 +62,24 @@ export const ChatWidget = ({ websiteId }: ChatWidgetProps) => {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium mb-2">Chat Bot Preamble</label>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              className="w-full p-2 border rounded-md"
+              rows={3}
+            />
+          </div>
+
           <Button 
-            onClick={() => setShowExportCode(true)}
+            onClick={handleCopyCode}
             className="w-full"
           >
-            Generate Export Code
+            Copy Embed Code
           </Button>
         </div>
       </Card>
-
-      {showExportCode && (
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">Export Code</h3>
-          <pre className="bg-gray-50 p-4 rounded-lg overflow-x-auto text-sm">
-            <code>{generateEmbedCode()}</code>
-          </pre>
-          <Button 
-            onClick={handleCopyCode}
-            className="mt-4"
-          >
-            Copy to Clipboard
-          </Button>
-        </Card>
-      )}
     </div>
   );
 };
