@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const getChatResponse = async (message: string, websiteId: string) => {
   try {
-    console.log('Sending chat message:', { message, websiteId });
+    console.log('Starting chat request:', { message, websiteId });
     
     // Get the website's user_id to update their credits
     const { data: website, error: websiteError } = await supabase
@@ -12,10 +12,11 @@ export const getChatResponse = async (message: string, websiteId: string) => {
       .single();
 
     if (websiteError) {
+      console.error('Website verification failed:', websiteError);
       throw new Error('Failed to verify website');
     }
 
-    // Check and update credits
+    // Check credits before making the API call
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('credits_remaining')
@@ -23,10 +24,14 @@ export const getChatResponse = async (message: string, websiteId: string) => {
       .single();
 
     if (profileError || !profile) {
+      console.error('Credit check failed:', profileError);
       throw new Error('Failed to check credits');
     }
 
+    console.log('Current credits:', profile.credits_remaining);
+
     if (profile.credits_remaining <= 0) {
+      console.error('No credits remaining for user');
       throw new Error('No credits remaining');
     }
 
@@ -45,19 +50,16 @@ export const getChatResponse = async (message: string, websiteId: string) => {
     });
 
     if (!response.ok) {
+      console.error('Cohere API error:', response.statusText);
       throw new Error('Failed to get chat response');
     }
 
     const data = await response.json();
 
     // Decrement credits after successful response
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ 
-        credits_remaining: profile.credits_remaining - 1,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', website.user_id);
+    const { error: updateError } = await supabase.rpc('decrement_credits', {
+      user_id: website.user_id
+    });
 
     if (updateError) {
       console.error('Error updating credits:', updateError);
@@ -69,7 +71,8 @@ export const getChatResponse = async (message: string, websiteId: string) => {
       .from('chat_sessions')
       .insert([{ 
         website_id: websiteId,
-        messages_count: 1
+        messages_count: 1,
+        started_at: new Date().toISOString()
       }]);
 
     if (sessionError) {

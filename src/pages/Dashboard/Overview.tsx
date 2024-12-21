@@ -15,6 +15,8 @@ const Overview = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
+      console.log('Fetching dashboard data for user:', session.user.id);
+
       // Fetch user profile and credits
       const { data: profile } = await supabase
         .from('profiles')
@@ -23,6 +25,7 @@ const Overview = () => {
         .single();
 
       if (profile) {
+        console.log('Credits data:', profile);
         setCredits(profile.credits_remaining || 0);
         // Calculate used credits (assuming starting from 100)
         setUsedCredits(100 - (profile.credits_remaining || 0));
@@ -42,6 +45,7 @@ const Overview = () => {
           .select('id', { count: 'exact' })
           .in('website_id', websiteIds);
 
+        console.log('Chat sessions count:', count);
         setTotalChats(count || 0);
         setActiveUsers(websiteIds.length);
       }
@@ -57,7 +61,8 @@ const Overview = () => {
         {
           event: '*',
           schema: 'public',
-          table: 'profiles'
+          table: 'profiles',
+          filter: `id=eq.${supabase.auth.getSession().then(({ data }) => data.session?.user.id)}`
         },
         (payload) => {
           console.log('Profile updated:', payload);
