@@ -7,6 +7,8 @@ import { EmbedCodeGenerator } from "@/components/EmbedCodeGenerator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
+const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
+
 const Demo = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -19,28 +21,40 @@ const Demo = () => {
     setIsLoading(true);
 
     try {
-      // First create a demo profile if it doesn't exist
-      const { data: profile } = await supabase
+      console.log('Creating demo profile...');
+      // First ensure the demo profile exists
+      const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
-          id: '00000000-0000-0000-0000-000000000000',
-          credits_remaining: 999999
-        })
-        .select()
-        .single();
+          id: DEMO_USER_ID,
+          credits_remaining: 999999,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
 
+      if (profileError) {
+        console.error('Error creating demo profile:', profileError);
+        throw profileError;
+      }
+
+      console.log('Creating demo website...');
       // Then create the demo website
-      const { data: website, error } = await supabase
+      const { data: website, error: websiteError } = await supabase
         .from('websites')
         .insert({
-          user_id: '00000000-0000-0000-0000-000000000000',
+          user_id: DEMO_USER_ID,
           url: url,
-          name: 'Demo Website'
+          name: 'Demo Website',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (websiteError) {
+        console.error('Error creating demo website:', websiteError);
+        throw websiteError;
+      }
 
       setWebsiteId(website.id);
       toast({
@@ -48,7 +62,7 @@ const Demo = () => {
         description: "Demo website created successfully",
       });
     } catch (error) {
-      console.error('Error creating demo website:', error);
+      console.error('Error in demo setup:', error);
       toast({
         title: "Error",
         description: "Failed to create demo website",
