@@ -30,12 +30,7 @@ export default defineConfig(({ mode }) => ({
         widget: path.resolve(__dirname, 'src/components/ChatWidget.tsx')
       },
       output: {
-        entryFileNames: (chunkInfo) => {
-          if (chunkInfo.name === 'widget') {
-            return 'widget.bundle.js';
-          }
-          return 'assets/[name]-[hash].js';
-        },
+        entryFileNames: 'widget.bundle.js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
           if (assetInfo.name === 'style.css') return 'widget.css';
