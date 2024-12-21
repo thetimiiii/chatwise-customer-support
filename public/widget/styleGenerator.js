@@ -4,7 +4,7 @@ export const generateChatStyles = (primaryColor) => `
     bottom: 20px;
     right: 20px;
     z-index: 9999;
-    font-family: system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
 
   .lovable-chat-button {
@@ -18,13 +18,13 @@ export const generateChatStyles = (primaryColor) => `
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transition: all 0.2s ease;
   }
 
   .lovable-chat-button:hover {
     transform: scale(1.05);
-    opacity: 0.95;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
   }
 
   .lovable-chat-window {
@@ -34,11 +34,12 @@ export const generateChatStyles = (primaryColor) => `
     width: 350px;
     height: 500px;
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     display: none;
     flex-direction: column;
     overflow: hidden;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     transition: all 0.3s ease;
   }
 
@@ -48,7 +49,7 @@ export const generateChatStyles = (primaryColor) => `
 
   .lovable-chat-header {
     padding: 16px;
-    background: #f8fafc;
+    background: #ffffff;
     border-bottom: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
@@ -59,7 +60,22 @@ export const generateChatStyles = (primaryColor) => `
     margin: 0;
     font-size: 16px;
     font-weight: 600;
-    color: #0f172a;
+    color: #1a1f2c;
+  }
+
+  .lovable-close-button {
+    background: none;
+    border: none;
+    color: #64748b;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    transition: all 0.2s ease;
+  }
+
+  .lovable-close-button:hover {
+    color: #475569;
   }
 
   .lovable-chat-messages {
@@ -69,15 +85,16 @@ export const generateChatStyles = (primaryColor) => `
     display: flex;
     flex-direction: column;
     gap: 12px;
+    background-color: #f8fafc;
   }
 
   .lovable-message {
     max-width: 85%;
-    padding: 10px 14px;
-    border-radius: 14px;
+    padding: 12px 16px;
+    border-radius: 16px;
     font-size: 14px;
-    line-height: 1.4;
-    transition: background-color 0.2s ease;
+    line-height: 1.5;
+    transition: all 0.2s ease;
   }
 
   .lovable-message.user {
@@ -89,9 +106,10 @@ export const generateChatStyles = (primaryColor) => `
 
   .lovable-message.bot {
     margin-right: auto;
-    background: #f1f5f9;
-    color: #0f172a;
+    background: white;
+    color: #1a1f2c;
     border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
 
   .lovable-chat-input {
@@ -104,38 +122,45 @@ export const generateChatStyles = (primaryColor) => `
 
   .lovable-chat-input input {
     flex: 1;
-    padding: 8px 12px;
-    border: 1px solid ${primaryColor}33;
-    border-radius: 6px;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
     outline: none;
     font-size: 14px;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     transition: all 0.2s ease;
   }
 
   .lovable-chat-input input:focus {
     border-color: ${primaryColor};
-    box-shadow: 0 0 0 1px ${primaryColor};
+    box-shadow: 0 0 0 2px ${primaryColor}20;
   }
 
   .lovable-chat-input button {
-    padding: 8px 16px;
+    padding: 10px 16px;
     background: ${primaryColor};
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .lovable-chat-input button:hover {
-    opacity: 0.95;
+    opacity: 0.9;
+    transform: translateY(-1px);
   }
 
   .lovable-chat-input button:disabled {
     background: #94a3b8;
     cursor: not-allowed;
+    transform: none;
   }
 
   @media (max-width: 640px) {

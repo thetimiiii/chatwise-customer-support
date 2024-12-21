@@ -47,11 +47,11 @@ export const updateStyles = (config) => {
     
     elements.input.addEventListener('focus', () => {
       elements.input.style.borderColor = config.primaryColor;
-      elements.input.style.boxShadow = `0 0 0 1px ${config.primaryColor}`;
+      elements.input.style.boxShadow = `0 0 0 2px ${config.primaryColor}20`;
     });
     
     elements.input.addEventListener('blur', () => {
-      elements.input.style.borderColor = `${config.primaryColor}33`;
+      elements.input.style.borderColor = '#e2e8f0';
       elements.input.style.boxShadow = 'none';
     });
   }
