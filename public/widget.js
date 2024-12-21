@@ -27,7 +27,7 @@
       console.log('Loading script:', src);
       const script = document.createElement('script');
       script.src = src;
-      script.crossOrigin = '';
+      script.crossOrigin = 'anonymous';
       script.onload = () => {
         console.log('Successfully loaded script:', src);
         resolve();
@@ -46,7 +46,8 @@
       console.log('Loading styles...');
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'https://lovable.dev/projects/4a2c6f52-2ba4-4219-9681-107bc7a5e062/widget.css';
+      link.href = 'https://lovable.dev/widget.css';
+      link.crossOrigin = 'anonymous';
       link.onload = () => {
         console.log('Styles loaded successfully');
         resolve();
@@ -69,7 +70,7 @@
       ]);
       
       console.log('Loading widget bundle...');
-      await loadScript('https://lovable.dev/projects/4a2c6f52-2ba4-4219-9681-107bc7a5e062/widget.bundle.js');
+      await loadScript('https://lovable.dev/widget.js');
 
       console.log('Loading styles...');
       await loadStyles();

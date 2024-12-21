@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    }
   },
   plugins: [
     react(),
@@ -27,7 +30,10 @@ export default defineConfig(({ mode }) => ({
       },
       output: {
         entryFileNames: (chunkInfo) => {
-          return chunkInfo.name === 'widget' ? 'widget.bundle.js' : 'assets/[name]-[hash].js';
+          if (chunkInfo.name === 'widget') {
+            return 'widget.js';
+          }
+          return 'assets/[name]-[hash].js';
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: (assetInfo) => {

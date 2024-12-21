@@ -16,7 +16,7 @@ interface ChatWidgetProps {
   onClose?: () => void
 }
 
-export const ChatWidget = ({ websiteId, token, onClose }: ChatWidgetProps) => {
+const ChatWidget = ({ websiteId, token, onClose }: ChatWidgetProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
@@ -107,9 +107,11 @@ export const ChatWidget = ({ websiteId, token, onClose }: ChatWidgetProps) => {
   )
 }
 
-// Export the component globally when in production
+// Export for both module and global usage
+export { ChatWidget }
+export default ChatWidget
+
+// Make it available globally when in browser
 if (typeof window !== 'undefined') {
   (window as any).ChatWidget = ChatWidget;
 }
-
-export default ChatWidget;
