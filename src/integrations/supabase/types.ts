@@ -6,12 +6,6 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface WebsiteConfig {
-  primaryColor: string;
-  preamble: string;
-  [key: string]: any; // Allow for future configuration options
-}
-
 export type Database = {
   public: {
     Tables: {
@@ -73,7 +67,7 @@ export type Database = {
       }
       websites: {
         Row: {
-          config: WebsiteConfig | null
+          config: Json | null
           created_at: string
           embed_token: string
           id: string
@@ -83,7 +77,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          config?: WebsiteConfig | null
+          config?: Json | null
           created_at?: string
           embed_token?: string
           id?: string
@@ -93,7 +87,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          config?: WebsiteConfig | null
+          config?: Json | null
           created_at?: string
           embed_token?: string
           id?: string
