@@ -1,6 +1,6 @@
 export interface WebsiteConfig {
-  preamble: string;
   primaryColor: string;
+  preamble: string;
 }
 
 export interface Website {
