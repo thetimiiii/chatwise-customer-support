@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { LogOut, LayoutDashboard, MessageSquare, BarChart3, CreditCard, Settings, SunIcon, MoonIcon } from "lucide-react";
+import { LogOut, LayoutDashboard, MessageSquare, BarChart3, CreditCard, Settings, SunIcon, MoonIcon, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Overview from "./Dashboard/Overview";
 import ChatWidgets from "./Dashboard/ChatWidgets";
 import Analytics from "./Dashboard/Analytics";
 import Billing from "./Dashboard/Billing";
 import SettingsPage from "./Dashboard/Settings";
+import DemoTab from "./Dashboard/Demo";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -66,6 +67,7 @@ const Dashboard = () => {
   const menuItems = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "chatwidgets", label: "Chat Widgets", icon: MessageSquare },
+    { id: "demo", label: "Demo Widget", icon: PlayCircle },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "billing", label: "Billing", icon: CreditCard },
     { id: "settings", label: "Settings", icon: Settings },
@@ -120,6 +122,7 @@ const Dashboard = () => {
         <main className="flex-1 p-6">
           {activeTab === "overview" && <Overview />}
           {activeTab === "chatwidgets" && <ChatWidgets />}
+          {activeTab === "demo" && <DemoTab />}
           {activeTab === "analytics" && <Analytics />}
           {activeTab === "billing" && <Billing />}
           {activeTab === "settings" && <SettingsPage />}
