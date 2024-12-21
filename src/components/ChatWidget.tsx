@@ -31,7 +31,7 @@ export const ChatWidget = ({
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
-  // Update configuration in Supabase when it changes
+  // Update configuration in Supabase and notify embedded widgets
   useEffect(() => {
     const updateConfig = async () => {
       try {
@@ -43,6 +43,12 @@ export const ChatWidget = ({
           .eq('id', websiteId);
 
         if (error) throw error;
+
+        // Notify embedded widgets about the configuration change
+        window.postMessage({
+          type: 'lovable-chat-config-update',
+          config: { primaryColor, preamble }
+        }, '*');
       } catch (error) {
         console.error('Error updating chat config:', error);
       }

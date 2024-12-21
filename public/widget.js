@@ -12,19 +12,8 @@
 
   async function initializeWidget() {
     try {
-      // Fetch configuration from the website's config
-      const { data: website, error } = await fetch(`/api/chat-config?websiteId=${websiteId}&token=${token}`)
-        .then(res => res.json())
-        .catch(() => ({
-          config: {
-            primaryColor: '#2563eb',
-            preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
-          }
-        }));
-
-      if (error) throw error;
-
-      const config = website.config || {
+      // Default configuration
+      const config = {
         primaryColor: '#2563eb',
         preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
       };
@@ -61,25 +50,16 @@
       // Initialize chat functionality
       initializeChat(container, config);
 
-      // Watch for configuration changes
-      setInterval(async () => {
-        try {
-          const { data: updatedWebsite } = await fetch(`/api/chat-config?websiteId=${websiteId}&token=${token}`)
-            .then(res => res.json());
-          
-          if (updatedWebsite?.config && 
-              (updatedWebsite.config.primaryColor !== config.primaryColor || 
-               updatedWebsite.config.preamble !== config.preamble)) {
-            // Update styles if primary color changed
-            if (updatedWebsite.config.primaryColor !== config.primaryColor) {
-              styles.textContent = generateChatStyles(updatedWebsite.config.primaryColor);
-            }
-            Object.assign(config, updatedWebsite.config);
+      // Watch for configuration changes from the demo widget
+      window.addEventListener('message', (event) => {
+        if (event.data.type === 'lovable-chat-config-update') {
+          const newConfig = event.data.config;
+          if (newConfig.primaryColor !== config.primaryColor) {
+            styles.textContent = generateChatStyles(newConfig.primaryColor);
           }
-        } catch (error) {
-          console.error('Error checking for config updates:', error);
+          Object.assign(config, newConfig);
         }
-      }, 5000); // Check every 5 seconds
+      });
     } catch (error) {
       console.error('Error initializing widget:', error);
     }

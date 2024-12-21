@@ -6,6 +6,11 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export interface WebsiteConfig {
+  primaryColor: string;
+  preamble: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -218,3 +223,4 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
