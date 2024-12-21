@@ -27,13 +27,13 @@ export const EmbedCodeGenerator = ({ websiteId }: { websiteId: string }) => {
 
       const code = `<!-- Lovable Chat Widget -->
 <div id="lovable-chat-container"></div>
-<script type="module">
+<script>
   (function() {
     var script = document.createElement('script');
     script.src = "${window.location.origin}/widget.js";
-    script.type = "module";
     script.setAttribute('data-website-id', '${websiteId}');
     script.setAttribute('data-token', '${website.embed_token}');
+    script.async = true;
     document.head.appendChild(script);
   })();
 </script>`;
