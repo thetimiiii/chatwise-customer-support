@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast"
 import { MessageCircle, Send, X } from "lucide-react"
 import { getChatResponse } from "@/services/chatService"
 import { supabase } from "@/integrations/supabase/client"
+import type { WebsiteConfig } from "@/integrations/supabase/types"
 
 interface Message {
   content: string
@@ -37,7 +38,7 @@ export const ChatWidget = ({
         const { error } = await supabase
           .from('websites')
           .update({ 
-            config: { primaryColor, preamble }
+            config: { primaryColor, preamble } as WebsiteConfig
           })
           .eq('id', websiteId);
 

@@ -12,13 +12,22 @@
 
   async function initializeWidget() {
     try {
-      // Fetch configuration from the parent website
-      const config = await fetch(`/api/chat-config?websiteId=${websiteId}&token=${token}`)
+      // Fetch configuration from the website's config
+      const { data: website, error } = await fetch(`/api/chat-config?websiteId=${websiteId}&token=${token}`)
         .then(res => res.json())
         .catch(() => ({
-          primaryColor: '#2563eb',
-          preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
+          config: {
+            primaryColor: '#2563eb',
+            preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
+          }
         }));
+
+      if (error) throw error;
+
+      const config = website.config || {
+        primaryColor: '#2563eb',
+        preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
+      };
 
       // Create and append styles
       const styles = document.createElement('style');
@@ -51,6 +60,26 @@
 
       // Initialize chat functionality
       initializeChat(container, config);
+
+      // Watch for configuration changes
+      setInterval(async () => {
+        try {
+          const { data: updatedWebsite } = await fetch(`/api/chat-config?websiteId=${websiteId}&token=${token}`)
+            .then(res => res.json());
+          
+          if (updatedWebsite?.config && 
+              (updatedWebsite.config.primaryColor !== config.primaryColor || 
+               updatedWebsite.config.preamble !== config.preamble)) {
+            // Update styles if primary color changed
+            if (updatedWebsite.config.primaryColor !== config.primaryColor) {
+              styles.textContent = generateChatStyles(updatedWebsite.config.primaryColor);
+            }
+            Object.assign(config, updatedWebsite.config);
+          }
+        } catch (error) {
+          console.error('Error checking for config updates:', error);
+        }
+      }, 5000); // Check every 5 seconds
     } catch (error) {
       console.error('Error initializing widget:', error);
     }

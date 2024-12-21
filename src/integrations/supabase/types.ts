@@ -6,6 +6,11 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+export interface WebsiteConfig {
+  primaryColor: string;
+  preamble: string;
+}
+
 export type Database = {
   public: {
     Tables: {
@@ -41,7 +46,48 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "websites"
             referencedColumns: ["id"]
-          },
+          }
+        ]
+      }
+      websites: {
+        Row: {
+          id: string
+          user_id: string
+          url: string
+          name: string
+          created_at: string
+          updated_at: string
+          embed_token: string
+          config: WebsiteConfig | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          url: string
+          name: string
+          created_at?: string
+          updated_at?: string
+          embed_token?: string
+          config?: WebsiteConfig | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          url?: string
+          name?: string
+          created_at?: string
+          updated_at?: string
+          embed_token?: string
+          config?: WebsiteConfig | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "websites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
         ]
       }
       profiles: {
@@ -64,44 +110,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      websites: {
-        Row: {
-          created_at: string
-          embed_token: string
-          id: string
-          name: string
-          updated_at: string
-          url: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          embed_token?: string
-          id?: string
-          name: string
-          updated_at?: string
-          url: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          embed_token?: string
-          id?: string
-          name?: string
-          updated_at?: string
-          url?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "websites_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Views: {
