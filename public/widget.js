@@ -28,7 +28,10 @@
       script.src = src;
       script.crossOrigin = '';
       script.onload = resolve;
-      script.onerror = reject;
+      script.onerror = (error) => {
+        console.error('Error loading script:', src, error);
+        reject(error);
+      };
       document.head.appendChild(script);
     });
   };
@@ -38,6 +41,8 @@
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = 'https://4a2c6f52-2ba4-4219-9681-107bc7a5e062.lovableproject.com/assets/index.css';
+    link.onload = () => console.log('Styles loaded successfully');
+    link.onerror = (error) => console.error('Error loading styles:', error);
     document.head.appendChild(link);
   };
 

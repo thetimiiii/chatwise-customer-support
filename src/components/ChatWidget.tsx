@@ -12,10 +12,11 @@ interface Message {
 
 interface ChatWidgetProps {
   websiteId: string
+  token?: string
   onClose?: () => void
 }
 
-export const ChatWidget = ({ websiteId, onClose }: ChatWidgetProps) => {
+export const ChatWidget = ({ websiteId, token, onClose }: ChatWidgetProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
@@ -104,4 +105,9 @@ export const ChatWidget = ({ websiteId, onClose }: ChatWidgetProps) => {
       </div>
     </div>
   )
+}
+
+// Export the component globally when in production
+if (process.env.NODE_ENV === 'production') {
+  (window as any).ChatWidget = ChatWidget;
 }
