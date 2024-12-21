@@ -113,7 +113,7 @@ const Dashboard = () => {
     <div className="flex min-h-screen bg-background">
       <DashboardSidebar />
       
-      <div className="flex-1 p-8">
+      <div className="flex-1 p-8 bg-background">
         <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -133,7 +133,7 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="p-6">
+          <Card className="p-6 bg-background">
             <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
             <div className="space-y-4">
               {recentActivity.map((activity) => (
@@ -150,7 +150,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-6 bg-background">
             <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
             <div className="space-y-4">
               {quickActions.map((action) => (
