@@ -17,28 +17,29 @@ import { sendChatMessage } from './chat-api.js';
 
   console.log('Initializing chat widget for website:', websiteId);
 
-  // Inject styles first
+  // Create container if it doesn't exist
+  let container = document.getElementById('lovable-chat-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'lovable-chat-container';
+    document.body.appendChild(container);
+  }
+
+  // Inject styles
   injectStyles();
-  console.log('Styles injected');
 
   // Create UI elements
   const ui = createWidgetUI();
-  if (!ui) {
-    console.error('Failed to create widget UI');
-    return;
-  }
-  console.log('Widget UI created successfully');
+  if (!ui) return;
 
   const { widget, chatButton, chatWindow, closeButton, messagesContainer, input, sendButton } = ui;
 
   // Toggle chat window
   chatButton.addEventListener('click', () => {
-    console.log('Chat button clicked, opening window');
     chatWindow.classList.add('open');
   });
 
   closeButton.addEventListener('click', () => {
-    console.log('Close button clicked, closing window');
     chatWindow.classList.remove('open');
   });
 
@@ -46,8 +47,6 @@ import { sendChatMessage } from './chat-api.js';
   async function handleSendMessage() {
     const message = input.value.trim();
     if (!message) return;
-
-    console.log('Sending message:', message);
 
     // Add user message to chat
     const userMessageElement = document.createElement('div');
@@ -62,7 +61,6 @@ import { sendChatMessage } from './chat-api.js';
     try {
       // Send message and get response
       const response = await sendChatMessage(message, websiteId, token);
-      console.log('Received response:', response);
 
       // Add bot response to chat
       const botMessageElement = document.createElement('div');
