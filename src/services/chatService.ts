@@ -4,18 +4,16 @@ export const getChatResponse = async (message: string, websiteId: string) => {
   try {
     console.log('Sending chat message:', { message, websiteId });
     
-    const { data: { session } } = await supabase.auth.getSession();
     const response = await fetch('https://api.cohere.ai/v1/chat', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.COHERE_API_KEY || 'u1uJ7ifVjzGHnzYVzsu0HQJiaYGBstRUkXnnGwzs'}`,
+        'Authorization': `Bearer ${import.meta.env.VITE_COHERE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         message,
         model: 'command',
         preamble: "You are a helpful customer support agent. Be concise and friendly in your responses.",
-        conversation_id: session?.user?.id,
       }),
     });
 
