@@ -1,53 +1,106 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, Routes, Route } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { MessageSquare, Users, CreditCard, TrendingUp, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { EmbedCodeGenerator } from "@/components/EmbedCodeGenerator";
 
-const Dashboard = () => {
-  const navigate = useNavigate();
+// Tab components
+const ChatWidgets = () => {
+  const [websites, setWebsites] = useState([]);
   const { toast } = useToast();
-  const [credits, setCredits] = useState(0);
-  const [usedCredits, setUsedCredits] = useState(0);
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login");
+    const fetchWebsites = async () => {
+      const { data, error } = await supabase
+        .from('websites')
+        .select('*');
+      
+      if (error) {
+        toast({
+          title: "Error fetching websites",
+          description: error.message,
+          variant: "destructive",
+        });
         return;
       }
 
-      // Fetch user profile and credits
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('credits_remaining')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profile) {
-        setCredits(profile.credits_remaining || 0);
-      }
-
-      // Fetch used credits from chat sessions
-      const { count } = await supabase
-        .from('chat_sessions')
-        .select('id', { count: 'exact' })
-        .eq('website_id', session.user.id);
-
-      setUsedCredits(count || 0);
+      setWebsites(data || []);
     };
 
-    checkUser();
-  }, [navigate]);
+    fetchWebsites();
+  }, [toast]);
 
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Chat Widgets</h2>
+      {websites.map((website) => (
+        <Card key={website.id} className="p-6 bg-background">
+          <h3 className="text-lg font-semibold mb-4">{website.name}</h3>
+          <p className="text-muted-foreground mb-4">{website.url}</p>
+          <EmbedCodeGenerator websiteId={website.id} />
+        </Card>
+      ))}
+    </div>
+  );
+};
+
+const Analytics = () => (
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold">Analytics</h2>
+    <Card className="p-6 bg-background">
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Chat Statistics</h3>
+        {/* Add your analytics content here */}
+      </div>
+    </Card>
+  </div>
+);
+
+const Billing = () => (
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold">Billing</h2>
+    <Card className="p-6 bg-background">
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Subscription Details</h3>
+        {/* Add your billing content here */}
+      </div>
+    </Card>
+  </div>
+);
+
+const Export = () => (
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold">Export</h2>
+    <Card className="p-6 bg-background">
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Export Data</h3>
+        {/* Add your export content here */}
+      </div>
+    </Card>
+  </div>
+);
+
+const Settings = () => (
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold">Settings</h2>
+    <Card className="p-6 bg-background">
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Account Settings</h3>
+        {/* Add your settings content here */}
+      </div>
+    </Card>
+  </div>
+);
+
+const Overview = () => {
   const stats = [
     {
       title: "Chat Credits Used",
-      value: usedCredits,
+      value: "234",
       icon: MessageSquare,
       color: "bg-blue-100",
       iconColor: "text-blue-500"
@@ -110,67 +163,117 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <DashboardSidebar />
+    <div>
+      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
       
-      <div className="flex-1 p-8 bg-background">
-        <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat) => (
-            <Card key={stat.title} className="p-6">
-              <div className="flex items-center gap-4">
-                <div className={cn("p-2 rounded-lg", stat.color)}>
-                  <stat.icon className={cn("w-5 h-5", stat.iconColor)} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {stats.map((stat) => (
+          <Card key={stat.title} className="p-6">
+            <div className="flex items-center gap-4">
+              <div className={cn("p-2 rounded-lg", stat.color)}>
+                <stat.icon className={cn("w-5 h-5", stat.iconColor)} />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">{stat.title}</p>
+                <p className="text-2xl font-bold">{stat.value}</p>
+              </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6 bg-background">
+          <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
+          <div className="space-y-4">
+            {recentActivity.map((activity) => (
+              <div key={activity.title} className="flex items-center gap-4">
+                <div className={cn("p-2 rounded-lg", activity.color)}>
+                  <activity.icon className={cn("w-4 h-4", activity.iconColor)} />
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
-                  <p className="text-2xl font-bold">{stat.value}</p>
+                <div className="flex-1">
+                  <p className="font-medium">{activity.title}</p>
+                  <p className="text-sm text-muted-foreground">{activity.time}</p>
                 </div>
               </div>
-            </Card>
-          ))}
-        </div>
+            ))}
+          </div>
+        </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="p-6 bg-background">
-            <h2 className="text-lg font-semibold mb-4">Recent Activity</h2>
-            <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.title} className="flex items-center gap-4">
-                  <div className={cn("p-2 rounded-lg", activity.color)}>
-                    <activity.icon className={cn("w-4 h-4", activity.iconColor)} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{activity.title}</p>
-                    <p className="text-sm text-muted-foreground">{activity.time}</p>
-                  </div>
+        <Card className="p-6 bg-background">
+          <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+          <div className="space-y-4">
+            {quickActions.map((action) => (
+              <button
+                key={action.title}
+                className="flex items-center gap-4 w-full p-4 rounded-lg hover:bg-muted transition-colors"
+              >
+                <div className={cn("p-2 rounded-lg", action.color)}>
+                  <action.icon className={cn("w-4 h-4", action.iconColor)} />
                 </div>
-              ))}
-            </div>
-          </Card>
+                <div className="flex-1 text-left">
+                  <p className="font-medium">{action.title}</p>
+                  <p className="text-sm text-muted-foreground">{action.description}</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground" />
+              </button>
+            ))}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+};
 
-          <Card className="p-6 bg-background">
-            <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-            <div className="space-y-4">
-              {quickActions.map((action) => (
-                <button
-                  key={action.title}
-                  className="flex items-center gap-4 w-full p-4 rounded-lg hover:bg-muted transition-colors"
-                >
-                  <div className={cn("p-2 rounded-lg", action.color)}>
-                    <action.icon className={cn("w-4 h-4", action.iconColor)} />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <p className="font-medium">{action.title}</p>
-                    <p className="text-sm text-muted-foreground">{action.description}</p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
-                </button>
-              ))}
-            </div>
-          </Card>
-        </div>
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [credits, setCredits] = useState(0);
+  const [usedCredits, setUsedCredits] = useState(0);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/login");
+        return;
+      }
+
+      // Fetch user profile and credits
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('credits_remaining')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile) {
+        setCredits(profile.credits_remaining || 0);
+      }
+
+      // Fetch used credits from chat sessions
+      const { count } = await supabase
+        .from('chat_sessions')
+        .select('id', { count: 'exact' })
+        .eq('website_id', session.user.id);
+
+      setUsedCredits(count || 0);
+    };
+
+    checkUser();
+  }, [navigate]);
+
+  return (
+    <div className="flex min-h-screen bg-background">
+      <DashboardSidebar />
+      <div className="flex-1 p-8 bg-background">
+        <Routes>
+          <Route path="/" element={<Overview />} />
+          <Route path="/widgets" element={<ChatWidgets />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/billing" element={<Billing />} />
+          <Route path="/export" element={<Export />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
       </div>
     </div>
   );
