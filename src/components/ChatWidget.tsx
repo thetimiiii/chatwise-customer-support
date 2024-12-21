@@ -37,7 +37,7 @@ export const ChatWidget = ({
       console.log('Broadcasting config update:', { primaryColor, preamble });
       window.postMessage({
         type: 'lovable-chat-config-update',
-        config: { primaryColor, preamble }
+        config: { primaryColor, preamble } as WebsiteConfig
       }, '*');
     };
 
