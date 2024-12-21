@@ -46,7 +46,9 @@
       console.log('Loading styles...');
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'https://lovable.dev/widget.css';
+      // Use the current script's origin to load assets
+      const scriptOrigin = new URL(scriptElement.src).origin;
+      link.href = `${scriptOrigin}/assets/widget.css`;
       link.crossOrigin = 'anonymous';
       link.onload = () => {
         console.log('Styles loaded successfully');
@@ -70,7 +72,9 @@
       ]);
       
       console.log('Loading widget bundle...');
-      await loadScript('https://lovable.dev/widget.js');
+      // Use the current script's origin to load the widget bundle
+      const scriptOrigin = new URL(scriptElement.src).origin;
+      await loadScript(`${scriptOrigin}/assets/widget.js`);
 
       console.log('Loading styles...');
       await loadStyles();
