@@ -46,7 +46,7 @@
       console.log('Loading styles...');
       const link = document.createElement('link');
       link.rel = 'stylesheet';
-      link.href = 'https://lovable.dev/projects/4a2c6f52-2ba4-4219-9681-107bc7a5e062/assets/widget.css';
+      link.href = 'https://lovable.dev/projects/4a2c6f52-2ba4-4219-9681-107bc7a5e062/widget.css';
       link.crossOrigin = 'anonymous';
       link.onload = () => {
         console.log('Styles loaded successfully');
@@ -70,7 +70,7 @@
       ]);
       
       console.log('Loading widget bundle...');
-      await loadScript('https://lovable.dev/projects/4a2c6f52-2ba4-4219-9681-107bc7a5e062/assets/widget.js');
+      await loadScript('https://lovable.dev/projects/4a2c6f52-2ba4-4219-9681-107bc7a5e062/widget.bundle.js');
 
       console.log('Loading styles...');
       await loadStyles();
