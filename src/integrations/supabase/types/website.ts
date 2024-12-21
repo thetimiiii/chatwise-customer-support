@@ -1,17 +1,15 @@
-import { Json, JsonObject } from './json';
-
-export interface WebsiteConfig extends JsonObject {
+export interface WebsiteConfig {
   primaryColor: string;
   preamble: string;
 }
 
-// Add type guard for runtime type checking
-export const isWebsiteConfig = (value: Json): value is WebsiteConfig => {
-  if (typeof value !== 'object' || value === null) return false;
-  
-  const config = value as Record<string, unknown>;
-  return (
-    typeof config.primaryColor === 'string' &&
-    typeof config.preamble === 'string'
-  );
-};
+export interface Website {
+  id: string;
+  user_id: string;
+  url: string;
+  name: string;
+  created_at: string;
+  updated_at: string;
+  embed_token: string;
+  config: WebsiteConfig;
+}
