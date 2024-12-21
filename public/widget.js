@@ -10,142 +10,113 @@
     return;
   }
 
-  async function initializeWidget() {
-    try {
-      // Default configuration
-      const config = {
-        primaryColor: '#2563eb',
-        preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
-      };
+  // Configuration state
+  let currentConfig = {
+    primaryColor: '#2563eb',
+    preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
+  };
 
-      // Create and append styles
-      const styles = document.createElement('style');
-      styles.textContent = generateChatStyles(config.primaryColor);
-      document.head.appendChild(styles);
-
-      // Create widget HTML
-      const container = document.createElement('div');
-      container.className = 'lovable-chat-widget';
-      container.innerHTML = `
-        <button class="lovable-chat-button">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-        </button>
-        <div class="lovable-chat-window">
-          <div class="lovable-chat-header">
-            <h3>Chat Support</h3>
-            <button class="lovable-close-button">×</button>
-          </div>
-          <div class="lovable-chat-messages"></div>
-          <div class="lovable-chat-input">
-            <input type="text" placeholder="Type your message...">
-            <button>Send</button>
-          </div>
-        </div>
-      `;
-
-      document.body.appendChild(container);
-
-      // Initialize chat functionality
-      initializeChat(container, config);
-
-      // Watch for configuration changes from the demo widget
-      window.addEventListener('message', (event) => {
-        if (event.data.type === 'lovable-chat-config-update') {
-          console.log('Received config update:', event.data.config);
-          const newConfig = event.data.config;
-          
-          // Update all elements that use the primary color
-          updateAllColors(container, newConfig.primaryColor);
-          
-          // Update styles
-          styles.textContent = generateChatStyles(newConfig.primaryColor);
-          
-          // Update config
-          Object.assign(config, newConfig);
-          
-          console.log('Widget updated with new config:', config);
-        }
-      });
-    } catch (error) {
-      console.error('Error initializing widget:', error);
-    }
-  }
-
-  function updateAllColors(container, primaryColor) {
-    // Update all elements that should use the primary color
-    const chatButton = container.querySelector('.lovable-chat-button');
-    const sendButton = container.querySelector('.lovable-chat-input button');
-    const userMessages = container.querySelectorAll('.lovable-message.user');
-    const input = container.querySelector('.lovable-chat-input input');
+  // Style management
+  function updateAllStyles(config) {
+    console.log('Updating all styles with config:', config);
     
-    if (chatButton) {
-      chatButton.style.backgroundColor = primaryColor;
-      console.log('Updated chat button color:', primaryColor);
+    const container = document.querySelector('.lovable-chat-widget');
+    if (!container) return;
+
+    // Update all color-dependent elements
+    const elements = {
+      chatButton: container.querySelector('.lovable-chat-button'),
+      sendButton: container.querySelector('.lovable-chat-input button'),
+      userMessages: container.querySelectorAll('.lovable-message.user'),
+      input: container.querySelector('.lovable-chat-input input')
+    };
+
+    // Update button colors
+    if (elements.chatButton) {
+      elements.chatButton.style.backgroundColor = config.primaryColor;
+      elements.chatButton.style.transition = 'all 0.2s ease';
     }
     
-    if (sendButton) {
-      sendButton.style.backgroundColor = primaryColor;
-      console.log('Updated send button color:', primaryColor);
+    if (elements.sendButton) {
+      elements.sendButton.style.backgroundColor = config.primaryColor;
+      elements.sendButton.style.transition = 'all 0.2s ease';
     }
     
-    userMessages.forEach(msg => {
-      msg.style.backgroundColor = primaryColor;
-      console.log('Updated user message color:', primaryColor);
+    // Update user messages
+    elements.userMessages.forEach(msg => {
+      msg.style.backgroundColor = config.primaryColor;
+      msg.style.transition = 'background-color 0.2s ease';
     });
     
-    if (input) {
-      input.style.borderColor = `${primaryColor}33`; // 20% opacity
-      input.addEventListener('focus', () => {
-        input.style.borderColor = primaryColor;
-        input.style.boxShadow = `0 0 0 1px ${primaryColor}`;
+    // Update input styling
+    if (elements.input) {
+      elements.input.style.borderColor = `${config.primaryColor}33`;
+      elements.input.style.transition = 'all 0.2s ease';
+      
+      elements.input.addEventListener('focus', () => {
+        elements.input.style.borderColor = config.primaryColor;
+        elements.input.style.boxShadow = `0 0 0 1px ${config.primaryColor}`;
       });
-      input.addEventListener('blur', () => {
-        input.style.borderColor = `${primaryColor}33`;
-        input.style.boxShadow = 'none';
+      
+      elements.input.addEventListener('blur', () => {
+        elements.input.style.borderColor = `${config.primaryColor}33`;
+        elements.input.style.boxShadow = 'none';
       });
     }
+
+    // Update styles in stylesheet
+    const styleElement = document.querySelector('style[data-lovable-chat]');
+    if (styleElement) {
+      styleElement.textContent = generateChatStyles(config.primaryColor);
+    }
+
+    console.log('Styles updated successfully');
   }
 
+  // Initialize chat functionality
   function initializeChat(container, config) {
-    const chatButton = container.querySelector('.lovable-chat-button');
-    const chatWindow = container.querySelector('.lovable-chat-window');
-    const closeButton = container.querySelector('.lovable-close-button');
-    const messagesContainer = container.querySelector('.lovable-chat-messages');
-    const input = container.querySelector('input');
-    const sendButton = container.querySelector('.lovable-chat-input button');
+    const elements = {
+      chatButton: container.querySelector('.lovable-chat-button'),
+      chatWindow: container.querySelector('.lovable-chat-window'),
+      closeButton: container.querySelector('.lovable-close-button'),
+      messagesContainer: container.querySelector('.lovable-chat-messages'),
+      input: container.querySelector('input'),
+      sendButton: container.querySelector('.lovable-chat-input button')
+    };
 
-    // Set initial colors
-    updateAllColors(container, config.primaryColor);
+    // Set initial styles
+    updateAllStyles(config);
 
-    chatButton.addEventListener('click', () => {
-      chatWindow.classList.add('open');
+    // Event handlers
+    elements.chatButton.addEventListener('click', () => {
+      elements.chatWindow.classList.add('open');
       console.log('Chat window opened');
     });
     
-    closeButton.addEventListener('click', () => {
-      chatWindow.classList.remove('open');
+    elements.closeButton.addEventListener('click', () => {
+      elements.chatWindow.classList.remove('open');
       console.log('Chat window closed');
     });
 
     async function sendMessage() {
-      const message = input.value.trim();
+      const message = elements.input.value.trim();
       if (!message) return;
 
-      input.disabled = true;
-      sendButton.disabled = true;
-
-      const userMessageElement = document.createElement('div');
-      userMessageElement.className = 'lovable-message user';
-      userMessageElement.textContent = message;
-      userMessageElement.style.backgroundColor = config.primaryColor;
-      messagesContainer.appendChild(userMessageElement);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-
-      input.value = '';
+      elements.input.disabled = true;
+      elements.sendButton.disabled = true;
 
       try {
+        // Create and append user message
+        const userMessageElement = document.createElement('div');
+        userMessageElement.className = 'lovable-message user';
+        userMessageElement.textContent = message;
+        userMessageElement.style.backgroundColor = config.primaryColor;
+        elements.messagesContainer.appendChild(userMessageElement);
+        elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
+
+        elements.input.value = '';
+
+        // Send message to API
         const response = await fetch('https://api.cohere.ai/v1/chat', {
           method: 'POST',
           headers: {
@@ -161,28 +132,31 @@
 
         if (!response.ok) throw new Error('Failed to send message');
 
+        // Handle response
         const data = await response.json();
         const botMessageElement = document.createElement('div');
         botMessageElement.className = 'lovable-message bot';
         botMessageElement.textContent = data.text;
-        messagesContainer.appendChild(botMessageElement);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        console.log('Bot response received and displayed');
+        elements.messagesContainer.appendChild(botMessageElement);
+        elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
+        
+        console.log('Message sent and response received');
       } catch (error) {
         console.error('Error sending message:', error);
         const errorMessageElement = document.createElement('div');
         errorMessageElement.className = 'lovable-message bot';
         errorMessageElement.textContent = 'Sorry, there was an error sending your message. Please try again.';
-        messagesContainer.appendChild(errorMessageElement);
+        elements.messagesContainer.appendChild(errorMessageElement);
       } finally {
-        input.disabled = false;
-        sendButton.disabled = false;
-        input.focus();
+        elements.input.disabled = false;
+        elements.sendButton.disabled = false;
+        elements.input.focus();
       }
     }
 
-    sendButton.addEventListener('click', sendMessage);
-    input.addEventListener('keypress', (e) => {
+    // Attach message sending handlers
+    elements.sendButton.addEventListener('click', sendMessage);
+    elements.input.addEventListener('keypress', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
@@ -190,6 +164,7 @@
     });
   }
 
+  // Generate chat styles
   function generateChatStyles(primaryColor) {
     return `
       .lovable-chat-widget {
@@ -212,7 +187,7 @@
         align-items: center;
         justify-content: center;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s, background-color 0.2s;
+        transition: all 0.2s ease;
       }
 
       .lovable-chat-button:hover {
@@ -255,21 +230,6 @@
         color: #0f172a;
       }
 
-      .lovable-close-button {
-        background: none;
-        border: none;
-        font-size: 24px;
-        color: #64748b;
-        cursor: pointer;
-        padding: 4px;
-        line-height: 1;
-        transition: color 0.2s;
-      }
-
-      .lovable-close-button:hover {
-        color: #0f172a;
-      }
-
       .lovable-chat-messages {
         flex: 1;
         overflow-y: auto;
@@ -285,7 +245,7 @@
         border-radius: 14px;
         font-size: 14px;
         line-height: 1.4;
-        transition: background-color 0.2s;
+        transition: background-color 0.2s ease;
       }
 
       .lovable-message.user {
@@ -317,7 +277,7 @@
         border-radius: 6px;
         outline: none;
         font-size: 14px;
-        transition: all 0.2s;
+        transition: all 0.2s ease;
       }
 
       .lovable-chat-input input:focus {
@@ -334,7 +294,7 @@
         cursor: pointer;
         font-size: 14px;
         font-weight: 500;
-        transition: all 0.2s;
+        transition: all 0.2s ease;
       }
 
       .lovable-chat-input button:hover {
@@ -354,6 +314,58 @@
         }
       }
     `;
+  }
+
+  // Initialize widget
+  async function initializeWidget() {
+    try {
+      // Create and append styles
+      const styles = document.createElement('style');
+      styles.setAttribute('data-lovable-chat', '');
+      styles.textContent = generateChatStyles(currentConfig.primaryColor);
+      document.head.appendChild(styles);
+
+      // Create widget HTML
+      const container = document.createElement('div');
+      container.className = 'lovable-chat-widget';
+      container.innerHTML = `
+        <button class="lovable-chat-button">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </button>
+        <div class="lovable-chat-window">
+          <div class="lovable-chat-header">
+            <h3>Chat Support</h3>
+            <button class="lovable-close-button">×</button>
+          </div>
+          <div class="lovable-chat-messages"></div>
+          <div class="lovable-chat-input">
+            <input type="text" placeholder="Type your message...">
+            <button>Send</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(container);
+
+      // Initialize chat
+      initializeChat(container, currentConfig);
+
+      // Listen for configuration updates
+      window.addEventListener('message', (event) => {
+        if (event.data.type === 'lovable-chat-config-update') {
+          console.log('Received config update:', event.data.config);
+          Object.assign(currentConfig, event.data.config);
+          updateAllStyles(currentConfig);
+          console.log('Widget updated with new config:', currentConfig);
+        }
+      });
+
+      console.log('Widget initialized successfully');
+    } catch (error) {
+      console.error('Error initializing widget:', error);
+    }
   }
 
   // Initialize the widget
