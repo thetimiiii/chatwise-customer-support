@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -52,11 +53,10 @@ const Dashboard = () => {
       <header className="bg-white shadow">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Websites</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
             <div className="flex gap-4">
-              <Button className="flex items-center gap-2">
-                <PlusIcon className="h-4 w-4" />
-                Add Website
+              <Button onClick={() => navigate("/demo")} variant="outline">
+                Try Demo
               </Button>
               <Button variant="outline" onClick={handleSignOut} className="flex items-center gap-2">
                 <LogOutIcon className="h-4 w-4" />
@@ -68,15 +68,45 @@ const Dashboard = () => {
       </header>
       <main>
         <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Placeholder for website cards */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <div className="text-sm font-medium text-gray-500">No websites yet</div>
-                <div className="mt-1 text-3xl font-semibold text-gray-900">Add your first website</div>
+          <Tabs defaultValue="websites" className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="websites">Websites</TabsTrigger>
+              <TabsTrigger value="usage">Usage</TabsTrigger>
+              <TabsTrigger value="settings">Settings</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="websites" className="space-y-4">
+              <div className="flex justify-end">
+                <Button className="flex items-center gap-2">
+                  <PlusIcon className="h-4 w-4" />
+                  Add Website
+                </Button>
               </div>
-            </div>
-          </div>
+              
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <div className="text-sm font-medium text-gray-500">No websites yet</div>
+                    <div className="mt-1 text-3xl font-semibold text-gray-900">Add your first website</div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="usage">
+              <div className="bg-white shadow rounded-lg p-6">
+                <h3 className="text-lg font-medium text-gray-900">Usage Statistics</h3>
+                <p className="mt-2 text-gray-600">Track your chat sessions and credits here.</p>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="settings">
+              <div className="bg-white shadow rounded-lg p-6">
+                <h3 className="text-lg font-medium text-gray-900">Account Settings</h3>
+                <p className="mt-2 text-gray-600">Manage your account preferences and billing information.</p>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
