@@ -7,8 +7,6 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Demo from "./pages/Demo";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup"; // New Signup page
-import LandingPage from "./pages/LandingPage"; // New Landing Page
 
 const queryClient = new QueryClient();
 
@@ -19,11 +17,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<LandingPage />} /> {/* Updated to LandingPage */}
+          <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} /> {/* Added Signup */}
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
