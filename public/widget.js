@@ -17,6 +17,14 @@ import { sendChatMessage } from './chat-api.js';
 
   console.log('Initializing chat widget for website:', websiteId);
 
+  // Create container if it doesn't exist
+  let container = document.getElementById('lovable-chat-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'lovable-chat-container';
+    document.body.appendChild(container);
+  }
+
   // Inject styles
   injectStyles();
 
