@@ -9,7 +9,7 @@ import Overview from "./Dashboard/Overview";
 import ChatWidgets from "./Dashboard/ChatWidgets";
 import Analytics from "./Dashboard/Analytics";
 import Billing from "./Dashboard/Billing";
-import Settings as SettingsPage from "./Dashboard/Settings";
+import SettingsPage from "./Dashboard/Settings";
 
 const Dashboard = () => {
   const navigate = useNavigate();
