@@ -7,8 +7,6 @@ import { getChatResponse } from "@/services/chatService"
 import { supabase } from "@/integrations/supabase/client"
 import { WebsiteConfig } from '@/integrations/supabase/types';
 
-
-
 interface Message {
   content: string
   isUser: boolean
@@ -83,11 +81,21 @@ export const ChatWidget = ({
       setMessages(prev => [...prev, { content: response, isUser: false }])
     } catch (error) {
       console.error('Error sending message:', error)
+      const errorMessage = error instanceof Error && error.message === 'No credits remaining'
+        ? "This website has run out of chat credits. Please contact the website owner."
+        : "Failed to send message. Please try again.";
+      
       toast({
         title: "Error",
-        description: "Failed to send message. Please try again.",
+        description: errorMessage,
         variant: "destructive",
-      })
+      });
+
+      // Add error message to chat
+      setMessages(prev => [...prev, { 
+        content: errorMessage,
+        isUser: false 
+      }]);
     } finally {
       setIsLoading(false)
     }

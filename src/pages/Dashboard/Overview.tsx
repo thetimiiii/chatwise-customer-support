@@ -24,6 +24,8 @@ const Overview = () => {
 
       if (profile) {
         setCredits(profile.credits_remaining || 0);
+        // Calculate used credits (assuming starting from 100)
+        setUsedCredits(100 - (profile.credits_remaining || 0));
       }
 
       // Fetch websites for the user
@@ -41,25 +43,28 @@ const Overview = () => {
           .in('website_id', websiteIds);
 
         setTotalChats(count || 0);
-        setUsedCredits(count || 0);
         setActiveUsers(websiteIds.length);
       }
     };
 
     fetchData();
 
-    // Set up real-time subscription for chat sessions
+    // Set up real-time subscription for profile updates
     const channel = supabase
-      .channel('chat_sessions_changes')
+      .channel('profile_changes')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'chat_sessions'
+          table: 'profiles'
         },
-        () => {
-          fetchData();
+        (payload) => {
+          console.log('Profile updated:', payload);
+          if (payload.new && 'credits_remaining' in payload.new) {
+            setCredits(payload.new.credits_remaining || 0);
+            setUsedCredits(100 - (payload.new.credits_remaining || 0));
+          }
         }
       )
       .subscribe();

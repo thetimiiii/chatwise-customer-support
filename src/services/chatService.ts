@@ -4,10 +4,10 @@ export const getChatResponse = async (message: string, websiteId: string) => {
   try {
     console.log('Sending chat message:', { message, websiteId });
     
-    // Get the website's embed token
+    // Get the website's user_id to update their credits
     const { data: website, error: websiteError } = await supabase
       .from('websites')
-      .select('embed_token')
+      .select('user_id')
       .eq('id', websiteId)
       .single();
 
@@ -15,6 +15,22 @@ export const getChatResponse = async (message: string, websiteId: string) => {
       throw new Error('Failed to verify website');
     }
 
+    // Check and update credits
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('credits_remaining')
+      .eq('id', website.user_id)
+      .single();
+
+    if (profileError || !profile) {
+      throw new Error('Failed to check credits');
+    }
+
+    if (profile.credits_remaining <= 0) {
+      throw new Error('No credits remaining');
+    }
+
+    // Make the API call
     const response = await fetch('https://api.cohere.ai/v1/chat', {
       method: 'POST',
       headers: {
@@ -33,7 +49,20 @@ export const getChatResponse = async (message: string, websiteId: string) => {
     }
 
     const data = await response.json();
-    console.log('Received chat response:', data);
+
+    // Decrement credits after successful response
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ 
+        credits_remaining: profile.credits_remaining - 1,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', website.user_id);
+
+    if (updateError) {
+      console.error('Error updating credits:', updateError);
+      // Continue anyway since we got the response
+    }
 
     // Track the chat session
     const { error: sessionError } = await supabase
@@ -47,6 +76,7 @@ export const getChatResponse = async (message: string, websiteId: string) => {
       console.error('Error tracking chat session:', sessionError);
     }
 
+    console.log('Chat response received and credits updated');
     return data.text;
   } catch (error) {
     console.error('Chat error:', error);
