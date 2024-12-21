@@ -37,42 +37,43 @@
   const loadStyles = () => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = `${window.location.origin}/src/index.css`;
+    link.href = 'https://4a2c6f52-2ba4-4219-9681-107bc7a5e062.lovableproject.com/assets/index.css';
     document.head.appendChild(link);
   };
 
   const init = async () => {
     try {
+      console.log('Loading dependencies...');
       // Load dependencies
       await Promise.all([
         loadScript('https://unpkg.com/react@18/umd/react.production.min.js'),
-        loadScript('https://unpkg.com/react-dom@18/umd/react-dom.production.min.js')
+        loadScript('https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'),
+        loadScript('https://4a2c6f52-2ba4-4219-9681-107bc7a5e062.lovableproject.com/assets/index.js')
       ]);
 
+      console.log('Dependencies loaded, loading styles...');
       // Load styles
       loadStyles();
 
-      // Import the ChatWidget component
-      const response = await fetch(`${window.location.origin}/src/components/ChatWidget.tsx`);
-      const componentCode = await response.text();
+      console.log('Creating widget...');
+      // Create and render the ChatWidget
+      const root = document.createElement('div');
+      container.appendChild(root);
       
-      // Create a new script element with the component code
-      const componentScript = document.createElement('script');
-      componentScript.type = 'module';
-      componentScript.textContent = `
-        import { ChatWidget } from '${window.location.origin}/src/components/ChatWidget';
-        
-        const container = document.getElementById('lovable-chat-container');
-        ReactDOM.render(
-          React.createElement(ChatWidget, { 
-            websiteId: '${websiteId}',
-            token: '${token}'
-          }),
-          container
-        );
-      `;
-      
-      document.body.appendChild(componentScript);
+      // Access the ChatWidget component from the loaded bundle
+      const ChatWidget = window.ChatWidget;
+      if (!ChatWidget) {
+        throw new Error('ChatWidget component not found in the loaded bundle');
+      }
+
+      console.log('Rendering widget...');
+      ReactDOM.render(
+        React.createElement(ChatWidget, { 
+          websiteId: websiteId,
+          token: token
+        }),
+        root
+      );
 
     } catch (error) {
       console.error('Error initializing Lovable Chat Widget:', error);
