@@ -95,15 +95,15 @@ export const ChatWidget = ({
         className="fixed bottom-4 right-4 rounded-full h-12 w-12 p-0"
         style={{ backgroundColor: primaryColor }}
       >
-        <MessageCircle className="h-6 w-6" />
+        <MessageCircle className="h-6 w-6 text-white" />
       </Button>
     )
   }
 
   return (
     <div className="fixed bottom-4 right-4 w-96 h-[500px] bg-white rounded-lg shadow-lg flex flex-col">
-      <div className="p-4 border-b flex justify-between items-center">
-        <h3 className="font-semibold">Chat Support</h3>
+      <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+        <h3 className="font-semibold text-gray-900">Chat Support</h3>
         <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
           <X className="h-4 w-4" />
         </Button>
@@ -118,7 +118,7 @@ export const ChatWidget = ({
             <div
               className={`max-w-[80%] rounded-lg p-3 ${
                 msg.isUser
-                  ? 'text-primary-foreground'
+                  ? 'text-white'
                   : 'bg-gray-100 text-gray-900'
               }`}
               style={{ backgroundColor: msg.isUser ? primaryColor : undefined }}
@@ -129,7 +129,7 @@ export const ChatWidget = ({
         ))}
       </div>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t bg-white">
         <form
           onSubmit={(e) => {
             e.preventDefault()
@@ -142,11 +142,13 @@ export const ChatWidget = ({
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type your message..."
             disabled={isLoading}
+            className="flex-1"
           />
           <Button 
             type="submit" 
             disabled={isLoading}
             style={{ backgroundColor: primaryColor }}
+            className="text-white px-4"
           >
             <Send className="h-4 w-4" />
           </Button>
