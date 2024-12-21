@@ -5,13 +5,13 @@ export const injectStyles = () => {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      z-index: 9999;
+      z-index: 999999;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     }
 
     .lovable-chat-button {
-      width: 48px;
-      height: 48px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
       background-color: #2563eb;
       color: white;
@@ -20,7 +20,7 @@ export const injectStyles = () => {
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
       transition: transform 0.2s;
     }
 
@@ -30,16 +30,17 @@ export const injectStyles = () => {
 
     .lovable-chat-window {
       position: fixed;
-      bottom: 80px;
+      bottom: 100px;
       right: 20px;
       width: 350px;
       height: 500px;
       background: white;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       display: none;
       flex-direction: column;
       overflow: hidden;
+      z-index: 999999;
     }
 
     .lovable-chat-window.open {
@@ -88,6 +89,7 @@ export const injectStyles = () => {
     .lovable-message {
       margin-bottom: 12px;
       max-width: 80%;
+      word-wrap: break-word;
     }
 
     .lovable-message.user {
@@ -104,6 +106,20 @@ export const injectStyles = () => {
       padding: 8px 12px;
       border-radius: 12px 12px 12px 0;
     }
+
+    .lovable-close-button {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      color: #666;
+    }
+
+    .lovable-close-button:hover {
+      color: #333;
+    }
   `;
   document.head.appendChild(styles);
+  console.log('Chat widget styles injected');
 };

@@ -1,8 +1,13 @@
 export const createWidgetUI = () => {
-  const container = document.getElementById('lovable-chat-container');
+  console.log('Creating widget UI elements...');
+  
+  // Create container if it doesn't exist
+  let container = document.getElementById('lovable-chat-container');
   if (!container) {
-    console.error('Lovable Chat Widget: Container element not found');
-    return null;
+    console.log('Container not found, creating new container');
+    container = document.createElement('div');
+    container.id = 'lovable-chat-container';
+    document.body.appendChild(container);
   }
 
   container.innerHTML = `
@@ -26,7 +31,7 @@ export const createWidgetUI = () => {
     </div>
   `;
 
-  return {
+  const elements = {
     widget: container.querySelector('.lovable-chat-widget'),
     chatButton: container.querySelector('.lovable-chat-button'),
     chatWindow: container.querySelector('.lovable-chat-window'),
@@ -35,4 +40,7 @@ export const createWidgetUI = () => {
     input: container.querySelector('input'),
     sendButton: container.querySelector('.lovable-chat-input button'),
   };
+
+  console.log('Widget UI elements created:', elements);
+  return elements;
 };
