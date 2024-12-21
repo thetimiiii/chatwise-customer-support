@@ -41,6 +41,31 @@ export const initializeChat = (container) => {
 
       elements.input.value = '';
 
+      // Get website ID from script tag
+      const scriptElement = document.currentScript || document.querySelector('script[data-website-id]');
+      const websiteId = scriptElement.getAttribute('data-website-id');
+      const token = scriptElement.getAttribute('data-token');
+
+      // Track chat session
+      const sessionResponse = await fetch('https://ccvfjhprrjirdvkecdbp.supabase.co/rest/v1/chat_sessions', {
+        method: 'POST',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjdmZqaHBycmppcmR2a2VjZGJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ3ODk2MjgsImV4cCI6MjA1MDM2NTYyOH0.M4ZXMi4z_2-RZxaYyUBmrekkOsfzcPSPhvLyZomD1XY',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjdmZqaHBycmppcmR2a2VjZGJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ3ODk2MjgsImV4cCI6MjA1MDM2NTYyOH0.M4ZXMi4z_2-RZxaYyUBmrekkOsfzcPSPhvLyZomD1XY`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({
+          website_id: websiteId,
+          messages_count: 1,
+          started_at: new Date().toISOString()
+        })
+      });
+
+      if (!sessionResponse.ok) {
+        console.error('Failed to track chat session:', await sessionResponse.text());
+      }
+
       // Send message to API
       const response = await fetch('https://api.cohere.ai/v1/chat', {
         method: 'POST',
