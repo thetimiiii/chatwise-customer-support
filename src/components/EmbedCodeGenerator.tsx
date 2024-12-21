@@ -17,6 +17,7 @@ export const EmbedCodeGenerator = ({ websiteId }: { websiteId: string }) => {
         .single();
       
       if (error) {
+        console.error('Error fetching embed token:', error);
         toast({
           title: "Error",
           description: "Failed to generate embed code",
@@ -25,17 +26,37 @@ export const EmbedCodeGenerator = ({ websiteId }: { websiteId: string }) => {
         return;
       }
 
-      const code = `<script>
-  (function(w,d,s,id,t) {
-    var js, fjs = d.getElementsByTagName(s)[0];
+      // Create a more robust embed code that includes the chat widget styles and container
+      const code = `<!-- Lovable Chat Widget -->
+<div id="lovable-chat-container"></div>
+<script>
+  (function(w,d,s,id) {
     if (d.getElementById(id)) return;
-    js = d.createElement(s);
+    
+    // Create container styles
+    var style = d.createElement('style');
+    style.innerHTML = \`
+      #lovable-chat-container {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999;
+      }
+    \`;
+    d.head.appendChild(style);
+    
+    // Load widget script
+    var js = d.createElement(s);
     js.id = id;
     js.src = "${window.location.origin}/widget.js";
     js.setAttribute('data-website-id', '${websiteId}');
     js.setAttribute('data-token', '${website.embed_token}');
+    js.async = true;
+    
+    // Add script to page
+    var fjs = d.getElementsByTagName(s)[0];
     fjs.parentNode.insertBefore(js, fjs);
-  }(window, document, 'script', 'cs-chat-widget'));
+  }(window, document, 'script', 'lovable-chat-widget'));
 </script>`;
       
       setEmbedCode(code);
@@ -55,7 +76,7 @@ export const EmbedCodeGenerator = ({ websiteId }: { websiteId: string }) => {
   return (
     <div className="space-y-4">
       <div className="bg-gray-50 p-4 rounded-lg">
-        <pre className="text-sm overflow-x-auto">
+        <pre className="text-sm overflow-x-auto whitespace-pre-wrap">
           <code>{embedCode}</code>
         </pre>
       </div>
