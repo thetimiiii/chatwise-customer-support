@@ -1,8 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { ChatWidget } from "@/components/ChatWidget";
 
 const Demo = () => {
   const navigate = useNavigate();
+
+  // This is a demo website ID - in production, this would come from the client's configuration
+  const demoWebsiteId = "00000000-0000-0000-0000-000000000000";
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -18,10 +22,11 @@ const Demo = () => {
       </header>
       <main className="flex-1 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold text-gray-900">Chat widget coming soon</h2>
-          <p className="mt-2 text-gray-600">Try out our AI-powered chat support</p>
+          <h2 className="text-2xl font-semibold text-gray-900">Try our AI Chat Support</h2>
+          <p className="mt-2 text-gray-600">Click the chat button in the bottom right corner</p>
         </div>
       </main>
+      <ChatWidget websiteId={demoWebsiteId} />
     </div>
   );
 };
