@@ -9,6 +9,8 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     headers: {
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Origin, X-Requested-With, Content-Type, Accept',
     }
   },
   plugins: [

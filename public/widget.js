@@ -21,25 +21,6 @@
     document.body.appendChild(container);
   }
 
-  // Load React and ReactDOM from CDN
-  const loadScript = (src) => {
-    return new Promise((resolve, reject) => {
-      console.log('Loading script:', src);
-      const script = document.createElement('script');
-      script.src = src;
-      script.crossOrigin = 'anonymous';
-      script.onload = () => {
-        console.log('Successfully loaded script:', src);
-        resolve();
-      };
-      script.onerror = (error) => {
-        console.error('Error loading script:', src, error);
-        reject(error);
-      };
-      document.head.appendChild(script);
-    });
-  };
-
   // Load required styles
   const loadStyles = () => {
     return new Promise((resolve, reject) => {
@@ -60,14 +41,43 @@
     });
   };
 
+  // Load script with retry mechanism
+  const loadScript = (src, retries = 3) => {
+    return new Promise((resolve, reject) => {
+      const tryLoad = (attemptsLeft) => {
+        console.log(`Loading script (${attemptsLeft} attempts left):`, src);
+        const script = document.createElement('script');
+        script.src = src;
+        script.crossOrigin = 'anonymous';
+        
+        script.onload = () => {
+          console.log('Successfully loaded script:', src);
+          resolve();
+        };
+        
+        script.onerror = (error) => {
+          console.error(`Error loading script (${attemptsLeft} attempts left):`, src, error);
+          if (attemptsLeft > 0) {
+            setTimeout(() => tryLoad(attemptsLeft - 1), 1000);
+          } else {
+            reject(error);
+          }
+        };
+        
+        document.head.appendChild(script);
+      };
+      
+      tryLoad(retries);
+    });
+  };
+
   const init = async () => {
     try {
       console.log('Loading dependencies...');
-      // Load dependencies
-      await Promise.all([
-        loadScript('https://unpkg.com/react@18/umd/react.production.min.js'),
-        loadScript('https://unpkg.com/react-dom@18/umd/react-dom.production.min.js')
-      ]);
+      // First load React
+      await loadScript('https://unpkg.com/react@18/umd/react.production.min.js');
+      // Then load ReactDOM after React is loaded
+      await loadScript('https://unpkg.com/react-dom@18/umd/react-dom.production.min.js');
       
       console.log('Loading widget bundle...');
       await loadScript('https://lovable.dev/projects/4a2c6f52-2ba4-4219-9681-107bc7a5e062/widget.bundle.js');
@@ -110,6 +120,6 @@
     }
   }
 
-  // Initialize the widget
-  init();
+  // Initialize the widget with a slight delay to ensure DOM is ready
+  setTimeout(init, 100);
 })();
