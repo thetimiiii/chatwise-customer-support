@@ -9,7 +9,13 @@
   // Initialize widget
   async function initializeWidget() {
     try {
-      const scriptElement = document.currentScript;
+      // Get script element by finding the one with our data attributes
+      const scriptElement = document.querySelector('script[data-website-id][data-token]');
+      if (!scriptElement) {
+        console.error('Lovable Chat Widget: Script element not found');
+        return;
+      }
+
       const websiteId = scriptElement.getAttribute('data-website-id');
       const token = scriptElement.getAttribute('data-token');
       
@@ -17,6 +23,8 @@
         console.error('Lovable Chat Widget: Missing required attributes');
         return;
       }
+
+      console.log('Initializing widget with websiteId:', websiteId);
 
       // Fetch initial config
       const config = await fetchConfig(websiteId, token);
