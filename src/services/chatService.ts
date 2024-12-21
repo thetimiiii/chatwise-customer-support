@@ -7,7 +7,7 @@ export const getChatResponse = async (message: string, websiteId: string) => {
     const response = await fetch('https://api.cohere.ai/v1/chat', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${import.meta.env.VITE_COHERE_API_KEY}`,
+        'Authorization': 'Bearer u1uJ7ifVjzGHnzYVzsu0HQJiaYGBstRUkXnnGwzs',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
