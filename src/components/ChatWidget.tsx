@@ -108,6 +108,8 @@ export const ChatWidget = ({ websiteId, token, onClose }: ChatWidgetProps) => {
 }
 
 // Export the component globally when in production
-if (process.env.NODE_ENV === 'production') {
+if (typeof window !== 'undefined') {
   (window as any).ChatWidget = ChatWidget;
 }
+
+export default ChatWidget;

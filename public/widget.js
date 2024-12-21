@@ -42,12 +42,21 @@
 
   // Load required styles
   const loadStyles = () => {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://lovable.dev/projects/4a2c6f52-2ba4-4219-9681-107bc7a5e062/widget.css';
-    link.onload = () => console.log('Styles loaded successfully');
-    link.onerror = (error) => console.error('Error loading styles:', error);
-    document.head.appendChild(link);
+    return new Promise((resolve, reject) => {
+      console.log('Loading styles...');
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'https://lovable.dev/projects/4a2c6f52-2ba4-4219-9681-107bc7a5e062/widget.css';
+      link.onload = () => {
+        console.log('Styles loaded successfully');
+        resolve();
+      };
+      link.onerror = (error) => {
+        console.error('Error loading styles:', error);
+        reject(error);
+      };
+      document.head.appendChild(link);
+    });
   };
 
   const init = async () => {
@@ -56,13 +65,14 @@
       // Load dependencies
       await Promise.all([
         loadScript('https://unpkg.com/react@18/umd/react.production.min.js'),
-        loadScript('https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'),
-        loadScript('https://lovable.dev/projects/4a2c6f52-2ba4-4219-9681-107bc7a5e062/widget.bundle.js')
+        loadScript('https://unpkg.com/react-dom@18/umd/react-dom.production.min.js')
       ]);
+      
+      console.log('Loading widget bundle...');
+      await loadScript('https://lovable.dev/projects/4a2c6f52-2ba4-4219-9681-107bc7a5e062/widget.bundle.js');
 
-      console.log('Dependencies loaded, loading styles...');
-      // Load styles
-      loadStyles();
+      console.log('Loading styles...');
+      await loadStyles();
 
       console.log('Creating widget...');
       // Create and render the ChatWidget
@@ -75,9 +85,10 @@
         throw new Error('ChatWidget component not found in the loaded bundle');
       }
 
-      console.log('Rendering widget...');
-      ReactDOM.render(
-        React.createElement(ChatWidget, { 
+      console.log('Rendering widget with props:', { websiteId, token });
+      // Use ReactDOM.render for React 17 compatibility
+      window.ReactDOM.render(
+        window.React.createElement(ChatWidget, { 
           websiteId: websiteId,
           token: token
         }),
@@ -88,9 +99,12 @@
     } catch (error) {
       console.error('Error initializing Lovable Chat Widget:', error);
       // Display a user-friendly error message in the container
+      container.innerHTML = ''; // Clear any previous content
       const errorContainer = document.createElement('div');
       errorContainer.textContent = 'Failed to load chat widget. Please try again later.';
       errorContainer.style.color = 'red';
+      errorContainer.style.padding = '1rem';
+      errorContainer.style.textAlign = 'center';
       container.appendChild(errorContainer);
     }
   }
