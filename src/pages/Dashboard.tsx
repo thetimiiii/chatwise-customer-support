@@ -75,43 +75,50 @@ const Dashboard = () => {
 
   return (
     <SidebarProvider defaultOpen>
-      <div className="min-h-screen flex bg-background">
-        <Sidebar>
-          <SidebarHeader className="p-4">
-            <h2 className="text-lg font-semibold">Lovable</h2>
+      <div className="min-h-screen flex bg-gradient-to-br from-white via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <Sidebar className="border-r border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md">
+          <SidebarHeader className="p-6">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">
+              Lovable
+            </h2>
           </SidebarHeader>
-          <SidebarContent>
+          
+          <SidebarContent className="px-3">
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     onClick={() => setActiveTab(item.id)}
                     data-active={activeTab === item.id}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200
+                      ${activeTab === item.id ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground font-medium' : ''}
+                    `}
                   >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.label}</span>
+                    <item.icon className={`h-5 w-5 ${activeTab === item.id ? 'text-primary' : ''}`} />
+                    <span className="text-sm">{item.label}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </SidebarContent>
-          <SidebarFooter className="p-4 flex flex-col gap-2">
+
+          <SidebarFooter className="p-6 flex flex-col gap-3 border-t border-gray-200 dark:border-gray-700">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className="rounded-full"
+              className="rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               {isDarkMode ? (
-                <SunIcon className="h-5 w-5" />
+                <SunIcon className="h-5 w-5 text-yellow-500" />
               ) : (
-                <MoonIcon className="h-5 w-5" />
+                <MoonIcon className="h-5 w-5 text-gray-600" />
               )}
             </Button>
             <Button
               variant="outline"
               onClick={handleSignOut}
-              className="w-full flex items-center gap-2"
+              className="w-full flex items-center gap-2 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               <LogOut className="h-4 w-4" />
               Sign out
@@ -119,13 +126,17 @@ const Dashboard = () => {
           </SidebarFooter>
         </Sidebar>
 
-        <main className="flex-1 p-6">
-          {activeTab === "overview" && <Overview />}
-          {activeTab === "chatwidgets" && <ChatWidgets />}
-          {activeTab === "demo" && <DemoTab />}
-          {activeTab === "analytics" && <Analytics />}
-          {activeTab === "billing" && <Billing />}
-          {activeTab === "settings" && <SettingsPage />}
+        <main className="flex-1 p-8 overflow-auto">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md rounded-2xl shadow-lg ring-1 ring-gray-100/5 dark:ring-gray-800/5 p-6">
+              {activeTab === "overview" && <Overview />}
+              {activeTab === "chatwidgets" && <ChatWidgets />}
+              {activeTab === "demo" && <DemoTab />}
+              {activeTab === "analytics" && <Analytics />}
+              {activeTab === "billing" && <Billing />}
+              {activeTab === "settings" && <SettingsPage />}
+            </div>
+          </div>
         </main>
       </div>
     </SidebarProvider>
