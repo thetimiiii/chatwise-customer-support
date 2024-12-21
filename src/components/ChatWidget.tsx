@@ -5,7 +5,8 @@ import { useToast } from "@/hooks/use-toast"
 import { MessageCircle, Send, X } from "lucide-react"
 import { getChatResponse } from "@/services/chatService"
 import { supabase } from "@/integrations/supabase/client"
-import type { WebsiteConfig } from "@/integrations/supabase/types"
+import { WebsiteConfig } from '@/integrations/supabase/types';
+
 
 interface Message {
   content: string
