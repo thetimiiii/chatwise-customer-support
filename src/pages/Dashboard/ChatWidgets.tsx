@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { PlusIcon, Trash2Icon, Settings2Icon } from "lucide-react";
+import { PlusIcon, Trash2Icon, Settings2Icon, Code2Icon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Website } from "@/integrations/supabase/types/website";
 import { HexColorPicker } from "react-colorful";
+import { EmbedCodeDialog } from "@/components/EmbedCodeDialog";
 
 const ChatWidgets = () => {
   const [websites, setWebsites] = useState<Website[]>([]);
@@ -15,6 +16,7 @@ const ChatWidgets = () => {
   const [newWebsiteName, setNewWebsiteName] = useState("");
   const [isAddingWebsite, setIsAddingWebsite] = useState(false);
   const [selectedWebsite, setSelectedWebsite] = useState<Website | null>(null);
+  const [showEmbedCode, setShowEmbedCode] = useState(false);
   const [primaryColor, setPrimaryColor] = useState("#2563eb");
   const [preamble, setPreamble] = useState(
     "You are a helpful customer support agent. Be concise and friendly in your responses."
@@ -40,11 +42,21 @@ const ChatWidgets = () => {
         return;
       }
 
-      setWebsites(data || []);
+      // Transform the data to ensure config is properly typed
+      const typedWebsites = data.map(website => ({
+        ...website,
+        config: website.config || {
+          primaryColor: "#2563eb",
+          preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
+        }
+      })) as Website[];
+
+      setWebsites(typedWebsites);
     };
 
     fetchWebsites();
 
+    // Subscribe to real-time updates
     const channel = supabase
       .channel('websites_changes')
       .on(
@@ -76,6 +88,10 @@ const ChatWidgets = () => {
           user_id: session.user.id,
           url: newWebsiteUrl,
           name: newWebsiteName || newWebsiteUrl,
+          config: {
+            primaryColor: "#2563eb",
+            preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
+          }
         })
         .select()
         .single();
@@ -107,6 +123,9 @@ const ChatWidgets = () => {
         .eq('id', websiteId);
 
       if (error) throw error;
+
+      // Update local state immediately
+      setWebsites(prev => prev.filter(website => website.id !== websiteId));
 
       toast({
         title: "Website deleted successfully",
@@ -256,6 +275,15 @@ const ChatWidgets = () => {
                     </DialogContent>
                   </Dialog>
                   <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSelectedWebsite(website);
+                      setShowEmbedCode(true);
+                    }}
+                  >
+                    <Code2Icon className="h-4 w-4" />
+                  </Button>
+                  <Button
                     variant="destructive"
                     size="icon"
                     onClick={() => handleDeleteWebsite(website.id)}
@@ -267,6 +295,14 @@ const ChatWidgets = () => {
             </Card>
           ))}
         </div>
+      )}
+
+      {selectedWebsite && (
+        <EmbedCodeDialog
+          website={selectedWebsite}
+          open={showEmbedCode}
+          onOpenChange={setShowEmbedCode}
+        />
       )}
     </div>
   );
