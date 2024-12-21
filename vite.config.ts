@@ -31,13 +31,13 @@ export default defineConfig(({ mode }) => ({
         entryFileNames: (chunkInfo) => {
           // Ensure widget bundle has a predictable name
           if (chunkInfo.name === 'widget') {
-            return 'assets/widget.js';
+            return 'widget.js';
           }
           return 'assets/[name]-[hash].js';
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: (assetInfo) => {
-          if (assetInfo.name === 'style.css') return 'assets/widget.css';
+          if (assetInfo.name === 'style.css') return 'widget.css';
           return 'assets/[name]-[hash][extname]';
         }
       }
