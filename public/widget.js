@@ -52,21 +52,28 @@
 
       // Watch for configuration changes from the demo widget
       window.addEventListener('message', (event) => {
-        console.log('Received message:', event.data);
         if (event.data.type === 'lovable-chat-config-update') {
+          console.log('Received config update:', event.data.config);
           const newConfig = event.data.config;
-          console.log('Updating widget config:', newConfig);
           
+          // Update styles with new primary color
           if (newConfig.primaryColor !== config.primaryColor) {
             styles.textContent = generateChatStyles(newConfig.primaryColor);
+            
+            // Update button colors immediately
+            const chatButton = container.querySelector('.lovable-chat-button');
+            const sendButton = container.querySelector('.lovable-chat-input button');
+            const userMessages = container.querySelectorAll('.lovable-message.user');
+            
+            if (chatButton) chatButton.style.backgroundColor = newConfig.primaryColor;
+            if (sendButton) sendButton.style.backgroundColor = newConfig.primaryColor;
+            userMessages.forEach(msg => {
+              msg.style.backgroundColor = newConfig.primaryColor;
+            });
           }
-          Object.assign(config, newConfig);
           
-          // Update button and send button colors
-          const chatButton = container.querySelector('.lovable-chat-button');
-          const sendButton = container.querySelector('.lovable-chat-input button');
-          if (chatButton) chatButton.style.backgroundColor = newConfig.primaryColor;
-          if (sendButton) sendButton.style.backgroundColor = newConfig.primaryColor;
+          // Update config
+          Object.assign(config, newConfig);
         }
       });
     } catch (error) {
@@ -95,6 +102,7 @@
       const userMessageElement = document.createElement('div');
       userMessageElement.className = 'lovable-message user';
       userMessageElement.textContent = message;
+      userMessageElement.style.backgroundColor = config.primaryColor;
       messagesContainer.appendChild(userMessageElement);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
@@ -206,6 +214,16 @@
         color: #0f172a;
       }
 
+      .lovable-close-button {
+        background: none;
+        border: none;
+        font-size: 24px;
+        color: #64748b;
+        cursor: pointer;
+        padding: 4px;
+        line-height: 1;
+      }
+
       .lovable-chat-messages {
         flex: 1;
         overflow-y: auto;
@@ -225,7 +243,6 @@
 
       .lovable-message.user {
         margin-left: auto;
-        background: ${primaryColor};
         color: white;
         border-bottom-right-radius: 4px;
       }
@@ -242,6 +259,7 @@
         border-top: 1px solid #e2e8f0;
         display: flex;
         gap: 8px;
+        background: white;
       }
 
       .lovable-chat-input input {
