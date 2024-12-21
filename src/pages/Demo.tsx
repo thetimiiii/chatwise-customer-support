@@ -1,13 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChatWidget } from "@/components/ChatWidget";
 import { EmbedCodeGenerator } from "@/components/EmbedCodeGenerator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-const DEMO_USER_ID = '00000000-0000-0000-0000-000000000000';
 
 const Demo = () => {
   const navigate = useNavigate();
@@ -16,33 +14,42 @@ const Demo = () => {
   const [websiteId, setWebsiteId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/login");
+      }
+    };
+
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        navigate("/login");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      console.log('Creating demo profile...');
-      // First ensure the demo profile exists
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: DEMO_USER_ID,
-          credits_remaining: 999999,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-
-      if (profileError) {
-        console.error('Error creating demo profile:', profileError);
-        throw profileError;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("No authenticated session");
       }
 
-      console.log('Creating demo website...');
-      // Then create the demo website
+      console.log('Creating website for user:', session.user.id);
       const { data: website, error: websiteError } = await supabase
         .from('websites')
         .insert({
-          user_id: DEMO_USER_ID,
+          user_id: session.user.id,
           url: url,
           name: 'Demo Website',
           created_at: new Date().toISOString(),
@@ -52,20 +59,20 @@ const Demo = () => {
         .single();
 
       if (websiteError) {
-        console.error('Error creating demo website:', websiteError);
+        console.error('Error creating website:', websiteError);
         throw websiteError;
       }
 
       setWebsiteId(website.id);
       toast({
         title: "Success",
-        description: "Demo website created successfully",
+        description: "Website created successfully",
       });
     } catch (error) {
-      console.error('Error in demo setup:', error);
+      console.error('Error in setup:', error);
       toast({
         title: "Error",
-        description: "Failed to create demo website",
+        description: "Failed to create website. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -79,8 +86,8 @@ const Demo = () => {
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">Live Demo</h1>
-            <Button onClick={() => navigate("/")} variant="outline">
-              Back to Home
+            <Button onClick={() => navigate("/dashboard")} variant="outline">
+              Back to Dashboard
             </Button>
           </div>
         </div>
@@ -88,7 +95,7 @@ const Demo = () => {
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="max-w-3xl mx-auto space-y-8">
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Setup Demo Website</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Setup Website</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="url" className="block text-sm font-medium text-gray-700">
@@ -105,7 +112,7 @@ const Demo = () => {
                 />
               </div>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Creating..." : "Create Demo Website"}
+                {isLoading ? "Creating..." : "Create Website"}
               </Button>
             </form>
           </div>
