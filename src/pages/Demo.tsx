@@ -6,6 +6,7 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { EmbedCodeGenerator } from "@/components/EmbedCodeGenerator";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { HexColorPicker } from "react-colorful";
 
 const Demo = () => {
   const navigate = useNavigate();
@@ -13,6 +14,10 @@ const Demo = () => {
   const [url, setUrl] = useState("");
   const [websiteId, setWebsiteId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [primaryColor, setPrimaryColor] = useState("#2563eb");
+  const [preamble, setPreamble] = useState(
+    "You are a helpful customer support agent. Be concise and friendly in your responses."
+  );
 
   useEffect(() => {
     const checkUser = async () => {
@@ -119,6 +124,29 @@ const Demo = () => {
 
           {websiteId && (
             <>
+              <div className="bg-white p-6 rounded-lg shadow">
+                <h2 className="text-2xl font-semibold text-gray-900 mb-4">Customize Chat Widget</h2>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Primary Color
+                    </label>
+                    <HexColorPicker color={primaryColor} onChange={setPrimaryColor} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Chat Bot Preamble
+                    </label>
+                    <textarea
+                      value={preamble}
+                      onChange={(e) => setPreamble(e.target.value)}
+                      className="w-full p-2 border rounded-md"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-4">Try our AI Chat Support</h2>
                 <p className="text-gray-600 mb-4">
@@ -137,7 +165,13 @@ const Demo = () => {
           )}
         </div>
       </main>
-      {websiteId && <ChatWidget websiteId={websiteId} />}
+      {websiteId && (
+        <ChatWidget 
+          websiteId={websiteId} 
+          primaryColor={primaryColor}
+          preamble={preamble}
+        />
+      )}
     </div>
   );
 };

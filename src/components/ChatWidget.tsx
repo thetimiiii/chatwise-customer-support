@@ -1,9 +1,10 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { MessageCircle, Send, X } from "lucide-react"
 import { getChatResponse } from "@/services/chatService"
+import { supabase } from "@/integrations/supabase/client"
 
 interface Message {
   content: string
@@ -13,14 +14,41 @@ interface Message {
 interface ChatWidgetProps {
   websiteId: string
   onClose?: () => void
+  primaryColor?: string
+  preamble?: string
 }
 
-export const ChatWidget = ({ websiteId, onClose }: ChatWidgetProps) => {
+export const ChatWidget = ({ 
+  websiteId, 
+  onClose,
+  primaryColor = "#2563eb",
+  preamble = "You are a helpful customer support agent. Be concise and friendly in your responses."
+}: ChatWidgetProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState("")
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+
+  // Update configuration in Supabase when it changes
+  useEffect(() => {
+    const updateConfig = async () => {
+      try {
+        const { error } = await supabase
+          .from('websites')
+          .update({ 
+            config: { primaryColor, preamble }
+          })
+          .eq('id', websiteId);
+
+        if (error) throw error;
+      } catch (error) {
+        console.error('Error updating chat config:', error);
+      }
+    };
+
+    updateConfig();
+  }, [websiteId, primaryColor, preamble]);
 
   const handleSendMessage = async () => {
     if (!message.trim()) return
