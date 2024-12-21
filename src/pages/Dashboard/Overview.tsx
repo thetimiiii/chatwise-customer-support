@@ -9,37 +9,42 @@ export const Overview = () => {
   const [totalChats, setTotalChats] = useState<number>(0);
 
   useEffect(() => {
-    // Fetch initial credits
-    const fetchCredits = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+    const fetchData = async () => {
+      // Get session
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session?.user?.id) return;
+      
+      const userId = sessionData.session.user.id;
 
+      // Fetch profile data
       const { data: profile } = await supabase
         .from('profiles')
         .select('credits_remaining')
-        .eq('id', session.user.id)
+        .eq('id', userId)
         .single();
 
       if (profile) {
         setCredits(profile.credits_remaining || 0);
       }
+
+      // Fetch total chats through websites
+      const { data: websites } = await supabase
+        .from('websites')
+        .select('id')
+        .eq('user_id', userId);
+
+      if (websites && websites.length > 0) {
+        const websiteIds = websites.map(w => w.id);
+        const { count } = await supabase
+          .from('chat_sessions')
+          .select('*', { count: 'exact' })
+          .in('website_id', websiteIds);
+
+        setTotalChats(count || 0);
+      }
     };
 
-    // Fetch total chats
-    const fetchTotalChats = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      const { count } = await supabase
-        .from('chat_sessions')
-        .select('*', { count: 'exact' })
-        .eq('user_id', session.user.id);
-
-      setTotalChats(count || 0);
-    };
-
-    fetchCredits();
-    fetchTotalChats();
+    fetchData();
 
     // Subscribe to real-time updates for credits
     const { data: { session } } = supabase.auth.getSession();
