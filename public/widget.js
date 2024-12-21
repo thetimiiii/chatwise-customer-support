@@ -56,28 +56,55 @@
           console.log('Received config update:', event.data.config);
           const newConfig = event.data.config;
           
-          // Update styles with new primary color
-          if (newConfig.primaryColor !== config.primaryColor) {
-            styles.textContent = generateChatStyles(newConfig.primaryColor);
-            
-            // Update button colors immediately
-            const chatButton = container.querySelector('.lovable-chat-button');
-            const sendButton = container.querySelector('.lovable-chat-input button');
-            const userMessages = container.querySelectorAll('.lovable-message.user');
-            
-            if (chatButton) chatButton.style.backgroundColor = newConfig.primaryColor;
-            if (sendButton) sendButton.style.backgroundColor = newConfig.primaryColor;
-            userMessages.forEach(msg => {
-              msg.style.backgroundColor = newConfig.primaryColor;
-            });
-          }
+          // Update all elements that use the primary color
+          updateAllColors(container, newConfig.primaryColor);
+          
+          // Update styles
+          styles.textContent = generateChatStyles(newConfig.primaryColor);
           
           // Update config
           Object.assign(config, newConfig);
+          
+          console.log('Widget updated with new config:', config);
         }
       });
     } catch (error) {
       console.error('Error initializing widget:', error);
+    }
+  }
+
+  function updateAllColors(container, primaryColor) {
+    // Update all elements that should use the primary color
+    const chatButton = container.querySelector('.lovable-chat-button');
+    const sendButton = container.querySelector('.lovable-chat-input button');
+    const userMessages = container.querySelectorAll('.lovable-message.user');
+    const input = container.querySelector('.lovable-chat-input input');
+    
+    if (chatButton) {
+      chatButton.style.backgroundColor = primaryColor;
+      console.log('Updated chat button color:', primaryColor);
+    }
+    
+    if (sendButton) {
+      sendButton.style.backgroundColor = primaryColor;
+      console.log('Updated send button color:', primaryColor);
+    }
+    
+    userMessages.forEach(msg => {
+      msg.style.backgroundColor = primaryColor;
+      console.log('Updated user message color:', primaryColor);
+    });
+    
+    if (input) {
+      input.style.borderColor = `${primaryColor}33`; // 20% opacity
+      input.addEventListener('focus', () => {
+        input.style.borderColor = primaryColor;
+        input.style.boxShadow = `0 0 0 1px ${primaryColor}`;
+      });
+      input.addEventListener('blur', () => {
+        input.style.borderColor = `${primaryColor}33`;
+        input.style.boxShadow = 'none';
+      });
     }
   }
 
@@ -89,8 +116,18 @@
     const input = container.querySelector('input');
     const sendButton = container.querySelector('.lovable-chat-input button');
 
-    chatButton.addEventListener('click', () => chatWindow.classList.add('open'));
-    closeButton.addEventListener('click', () => chatWindow.classList.remove('open'));
+    // Set initial colors
+    updateAllColors(container, config.primaryColor);
+
+    chatButton.addEventListener('click', () => {
+      chatWindow.classList.add('open');
+      console.log('Chat window opened');
+    });
+    
+    closeButton.addEventListener('click', () => {
+      chatWindow.classList.remove('open');
+      console.log('Chat window closed');
+    });
 
     async function sendMessage() {
       const message = input.value.trim();
@@ -130,6 +167,7 @@
         botMessageElement.textContent = data.text;
         messagesContainer.appendChild(botMessageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        console.log('Bot response received and displayed');
       } catch (error) {
         console.error('Error sending message:', error);
         const errorMessageElement = document.createElement('div');
@@ -174,11 +212,12 @@
         align-items: center;
         justify-content: center;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s;
+        transition: transform 0.2s, background-color 0.2s;
       }
 
       .lovable-chat-button:hover {
         transform: scale(1.05);
+        opacity: 0.95;
       }
 
       .lovable-chat-window {
@@ -193,6 +232,7 @@
         display: none;
         flex-direction: column;
         overflow: hidden;
+        transition: all 0.3s ease;
       }
 
       .lovable-chat-window.open {
@@ -211,6 +251,7 @@
       .lovable-chat-header h3 {
         margin: 0;
         font-size: 16px;
+        font-weight: 600;
         color: #0f172a;
       }
 
@@ -222,6 +263,11 @@
         cursor: pointer;
         padding: 4px;
         line-height: 1;
+        transition: color 0.2s;
+      }
+
+      .lovable-close-button:hover {
+        color: #0f172a;
       }
 
       .lovable-chat-messages {
@@ -239,11 +285,13 @@
         border-radius: 14px;
         font-size: 14px;
         line-height: 1.4;
+        transition: background-color 0.2s;
       }
 
       .lovable-message.user {
         margin-left: auto;
         color: white;
+        background-color: ${primaryColor};
         border-bottom-right-radius: 4px;
       }
 
@@ -265,10 +313,11 @@
       .lovable-chat-input input {
         flex: 1;
         padding: 8px 12px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid ${primaryColor}33;
         border-radius: 6px;
         outline: none;
         font-size: 14px;
+        transition: all 0.2s;
       }
 
       .lovable-chat-input input:focus {
@@ -285,16 +334,24 @@
         cursor: pointer;
         font-size: 14px;
         font-weight: 500;
-        transition: background-color 0.2s;
+        transition: all 0.2s;
       }
 
       .lovable-chat-input button:hover {
-        opacity: 0.9;
+        opacity: 0.95;
       }
 
       .lovable-chat-input button:disabled {
         background: #94a3b8;
         cursor: not-allowed;
+      }
+
+      @media (max-width: 640px) {
+        .lovable-chat-window {
+          width: calc(100% - 40px);
+          height: calc(100% - 100px);
+          bottom: 70px;
+        }
       }
     `;
   }
