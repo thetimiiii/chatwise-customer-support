@@ -11,10 +11,10 @@ export const Overview = () => {
   useEffect(() => {
     const fetchData = async () => {
       // Get session
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session?.user?.id) return;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
       
-      const userId = sessionData.session.user.id;
+      const userId = session.user.id;
 
       // Fetch profile data
       const { data: profile } = await supabase
@@ -47,9 +47,6 @@ export const Overview = () => {
     fetchData();
 
     // Subscribe to real-time updates for credits
-    const { data: { session } } = supabase.auth.getSession();
-    if (!session?.user?.id) return;
-
     const channel = supabase
       .channel('profile-changes')
       .on(
@@ -58,7 +55,7 @@ export const Overview = () => {
           event: 'UPDATE',
           schema: 'public',
           table: 'profiles',
-          filter: `id=eq.${session.user.id}`
+          filter: `id=eq.${supabase.auth.getSession().then(({ data }) => data.session?.user?.id)}`
         },
         (payload) => {
           if (payload.new.credits_remaining !== undefined) {
