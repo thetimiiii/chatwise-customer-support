@@ -90,7 +90,6 @@ const Index = () => {
       </nav>
 
       <main className="pt-16">
-        {/* Hero Section */}
         <div className="relative isolate px-6 pt-14 lg:px-8">
           <div className="mx-auto max-w-3xl py-32 sm:py-48 lg:py-56 text-center">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl mb-8">
@@ -119,7 +118,6 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Features Section */}
         <div className="py-24 sm:py-32 bg-white">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl lg:text-center">
