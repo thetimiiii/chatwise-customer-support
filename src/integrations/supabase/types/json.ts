@@ -5,3 +5,5 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
+
+export type JsonObject = { [key: string]: Json }

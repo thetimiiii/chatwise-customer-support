@@ -37,7 +37,10 @@ export const ChatWidget = ({
       console.log('Broadcasting config update:', { primaryColor, preamble });
       window.postMessage({
         type: 'lovable-chat-config-update',
-        config: { primaryColor, preamble } as WebsiteConfig
+        config: {
+          primaryColor,
+          preamble
+        } satisfies WebsiteConfig
       }, '*');
     };
 
@@ -50,7 +53,7 @@ export const ChatWidget = ({
         const { error } = await supabase
           .from('websites')
           .update({ 
-            config: { primaryColor, preamble } as WebsiteConfig
+            config: { primaryColor, preamble } satisfies WebsiteConfig
           })
           .eq('id', websiteId);
 

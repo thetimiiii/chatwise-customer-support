@@ -1,6 +1,6 @@
-import { Json } from './json';
+import { Json, JsonObject } from './json';
 
-export interface WebsiteConfig {
+export interface WebsiteConfig extends JsonObject {
   primaryColor: string;
   preamble: string;
 }
