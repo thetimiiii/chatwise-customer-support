@@ -44,7 +44,7 @@
   const loadStyles = () => {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = 'https://4a2c6f52-2ba4-4219-9681-107bc7a5e062.lovableproject.com/widget.css';
+    link.href = `https://${window.location.hostname}/widget.css`;
     link.onload = () => console.log('Styles loaded successfully');
     link.onerror = (error) => console.error('Error loading styles:', error);
     document.head.appendChild(link);
@@ -57,7 +57,7 @@
       await Promise.all([
         loadScript('https://unpkg.com/react@18/umd/react.production.min.js'),
         loadScript('https://unpkg.com/react-dom@18/umd/react-dom.production.min.js'),
-        loadScript('https://4a2c6f52-2ba4-4219-9681-107bc7a5e062.lovableproject.com/widget.bundle.js')
+        loadScript(`https://${window.location.hostname}/widget.bundle.js`)
       ]);
 
       console.log('Dependencies loaded, loading styles...');
@@ -86,6 +86,11 @@
 
     } catch (error) {
       console.error('Error initializing Lovable Chat Widget:', error);
+      // Optionally, display a user-friendly error message
+      const errorContainer = document.createElement('div');
+      errorContainer.textContent = 'Failed to load chat widget. Please try again later.';
+      errorContainer.style.color = 'red';
+      container.appendChild(errorContainer);
     }
   }
 
