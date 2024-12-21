@@ -1,5 +1,6 @@
+import { Json } from './json';
+
 export interface WebsiteConfig {
-  [key: string]: Json; // Added index signature for Json compatibility
   primaryColor: string;
   preamble: string;
 }
@@ -14,3 +15,13 @@ export interface Website {
   embed_token: string;
   config: WebsiteConfig;
 }
+
+export const isWebsiteConfig = (value: Json): value is WebsiteConfig => {
+  if (typeof value !== 'object' || value === null) return false;
+  
+  const config = value as Record<string, unknown>;
+  return (
+    typeof config.primaryColor === 'string' &&
+    typeof config.preamble === 'string'
+  );
+};
