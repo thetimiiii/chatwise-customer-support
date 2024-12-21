@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { MessageSquare, Users, CreditCard, TrendingUp, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Dashboard = () => {
   const navigate = useNavigate();
