@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from "@/integrations/supabase/client";
 import { PlusIcon, Trash2Icon, Settings2Icon, Code2Icon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { Website } from "@/integrations/supabase/types/website";
+import { Website, isWebsiteConfig } from "@/integrations/supabase/types/website";
 import { HexColorPicker } from "react-colorful";
 import { EmbedCodeDialog } from "@/components/EmbedCodeDialog";
 
@@ -45,7 +45,7 @@ const ChatWidgets = () => {
       // Transform the data to ensure config is properly typed
       const typedWebsites = data.map(website => ({
         ...website,
-        config: website.config || {
+        config: isWebsiteConfig(website.config) ? website.config : {
           primaryColor: "#2563eb",
           preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
         }

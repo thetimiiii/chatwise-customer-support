@@ -1,4 +1,5 @@
 import { Json } from './json';
+import { WebsiteConfig } from './website';
 
 export type Database = {
   public: {
@@ -28,15 +29,6 @@ export type Database = {
           started_at?: string
           website_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "chat_sessions_website_id_fkey"
-            columns: ["website_id"]
-            isOneToOne: false
-            referencedRelation: "websites"
-            referencedColumns: ["id"]
-          }
-        ]
       }
       profiles: {
         Row: {
@@ -57,11 +49,10 @@ export type Database = {
           id?: string
           updated_at?: string
         }
-        Relationships: []
       }
       websites: {
         Row: {
-          config: Json | null
+          config: Json
           created_at: string
           embed_token: string
           id: string
@@ -71,7 +62,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          config?: Json | null
+          config?: Json
           created_at?: string
           embed_token?: string
           id?: string
@@ -81,7 +72,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          config?: Json | null
+          config?: Json
           created_at?: string
           embed_token?: string
           id?: string
@@ -90,36 +81,10 @@ export type Database = {
           url?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "websites_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
-        ]
       }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
     }
   }
 }
 
-export type Tables<
-  T extends keyof Database['public']['Tables']
-> = Database['public']['Tables'][T]['Row'];
-
-export type Enums<
-  T extends keyof Database['public']['Enums']
-> = Database['public']['Enums'][T];
+export type Tables<T extends keyof Database['public']['Tables']> = 
+  Database['public']['Tables'][T]['Row'];
