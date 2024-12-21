@@ -9,6 +9,7 @@ export type Json =
 export interface WebsiteConfig {
   primaryColor: string;
   preamble: string;
+  [key: string]: Json; // Add this index signature
 }
 
 export type Database = {
@@ -223,4 +224,5 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
 
