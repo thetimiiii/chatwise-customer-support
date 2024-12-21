@@ -68,6 +68,7 @@ export type Database = {
       websites: {
         Row: {
           created_at: string
+          embed_token: string
           id: string
           name: string
           updated_at: string
@@ -76,6 +77,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          embed_token?: string
           id?: string
           name: string
           updated_at?: string
@@ -84,6 +86,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          embed_token?: string
           id?: string
           name?: string
           updated_at?: string

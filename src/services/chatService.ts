@@ -4,6 +4,17 @@ export const getChatResponse = async (message: string, websiteId: string) => {
   try {
     console.log('Sending chat message:', { message, websiteId });
     
+    // Get the website's embed token
+    const { data: website, error: websiteError } = await supabase
+      .from('websites')
+      .select('embed_token')
+      .eq('id', websiteId)
+      .single();
+
+    if (websiteError) {
+      throw new Error('Failed to verify website');
+    }
+
     const response = await fetch('https://api.cohere.ai/v1/chat', {
       method: 'POST',
       headers: {
