@@ -6,7 +6,7 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { Navigation } from "@/components/landing/Navigation";
 import { Hero } from "@/components/landing/Hero";
 import { features, highlights } from "@/data/landing";
-import { CircleCheck } from "lucide-react"; // Updated import
+import { CircleCheck } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -37,24 +37,31 @@ const Index = () => {
     setIsLoading(true);
 
     try {
-      // First, try to sign in as test user
-      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
+      // Format URL if needed
+      const formattedUrl = !demoUrl.startsWith('http') ? `https://${demoUrl}` : demoUrl;
+
+      // Sign in as test user
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: 'test@test.com',
-        password: 'testerino',
+        password: 'testerino', // Make sure this matches your actual test user password
       });
 
-      if (signInError) throw signInError;
-      if (!user) throw new Error('Failed to get user after sign in');
+      if (signInError) {
+        console.error("Auth error:", signInError);
+        throw new Error("Authentication failed");
+      }
 
-      console.log('Signed in as test user:', user.id);
+      if (!authData.user) {
+        throw new Error("No user data returned");
+      }
 
-      // Then create the website entry
+      // Create website entry
       const { data: website, error: websiteError } = await supabase
         .from('websites')
         .insert({
-          url: demoUrl,
+          url: formattedUrl,
           name: 'Demo Website',
-          user_id: user.id,
+          user_id: authData.user.id,
           config: {
             primaryColor: "#2563eb",
             preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
@@ -63,10 +70,14 @@ const Index = () => {
         .select()
         .single();
 
-      if (websiteError) throw websiteError;
+      if (websiteError) {
+        console.error("Website creation error:", websiteError);
+        throw new Error("Failed to create website");
+      }
 
       setWebsiteId(website.id);
       setShowChat(true);
+      
       toast({
         title: "Demo ready!",
         description: "Click the chat button in the bottom right to try it out.",
@@ -75,7 +86,7 @@ const Index = () => {
       console.error("Error setting up demo:", error);
       toast({
         title: "Error setting up demo",
-        description: "Please try again later.",
+        description: error instanceof Error ? error.message : "Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -143,7 +154,7 @@ const Index = () => {
               {highlights.map((highlight, index) => (
                 <div key={index} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                   <div className="flex items-center gap-4 mb-4">
-                    <CircleCheck className="h-6 w-6 text-primary" /> {/* Updated icon */}
+                    <CircleCheck className="h-6 w-6 text-primary" />
                     <h3 className="font-semibold text-lg">{highlight.title}</h3>
                   </div>
                   <p className="text-gray-600">{highlight.description}</p>
