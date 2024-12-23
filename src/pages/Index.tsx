@@ -43,12 +43,15 @@ const Index = () => {
 
     try {
       // First, try to sign in as test user
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: { user }, error: signInError } = await supabase.auth.signInWithPassword({
         email: 'test@test.com',
         password: 'test123',
       });
 
       if (signInError) throw signInError;
+      if (!user) throw new Error('Failed to get user after sign in');
+
+      console.log('Signed in as test user:', user.id);
 
       // Then create the website entry
       const { data: website, error: websiteError } = await supabase
@@ -56,6 +59,7 @@ const Index = () => {
         .insert({
           url: demoUrl,
           name: 'Demo Website',
+          user_id: user.id,
           config: {
             primaryColor: "#2563eb",
             preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
