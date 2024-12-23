@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowDown, MessageSquare, Zap, Shield } from "lucide-react";
+import { ArrowDown, MessageSquare, Zap, Shield, CheckCircle } from "lucide-react";
 import { ChatWidget } from "@/components/ChatWidget";
 
 const Index = () => {
@@ -25,14 +25,6 @@ const Index = () => {
     checkUser();
   }, [navigate]);
 
-  const formatUrl = (url: string) => {
-    if (!url) return url;
-    if (!url.startsWith('http://') && !url.startsWith('https://')) {
-      return `https://${url}`;
-    }
-    return url;
-  };
-
   const handleTryDemo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!demoUrl) {
@@ -49,18 +41,16 @@ const Index = () => {
       // First, try to sign in as test user
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: 'test@test.com',
-        password: 'testerino',
+        password: 'test123', // Make sure this matches your test account password
       });
 
       if (signInError) throw signInError;
-
-      const formattedUrl = formatUrl(demoUrl);
 
       // Then create the website entry
       const { data: website, error: websiteError } = await supabase
         .from('websites')
         .insert({
-          url: formattedUrl,
+          url: demoUrl,
           name: 'Demo Website',
           config: {
             primaryColor: "#2563eb",
@@ -79,6 +69,7 @@ const Index = () => {
         description: "Click the chat button in the bottom right to try it out.",
       });
     } catch (error) {
+      console.error("Error setting up demo:", error);
       toast({
         title: "Error setting up demo",
         description: "Please try again later.",
@@ -96,7 +87,14 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex-shrink-0 font-bold text-2xl bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">
-              Chatly
+              <a href="/" className="hover:opacity-80 transition-opacity">
+                Chatly
+              </a>
+            </div>
+            <div className="hidden md:flex space-x-8">
+              <a href="#features" className="text-gray-600 hover:text-gray-900">Features</a>
+              <a href="#highlights" className="text-gray-600 hover:text-gray-900">Highlights</a>
+              <a href="#pricing" className="text-gray-600 hover:text-gray-900">Pricing</a>
             </div>
             <div className="flex gap-6">
               <Button
@@ -139,8 +137,8 @@ const Index = () => {
             <form onSubmit={handleTryDemo} className="max-w-xl mx-auto">
               <div className="flex gap-3">
                 <Input
-                  type="text"
-                  placeholder="apple.com"
+                  type="url"
+                  placeholder="Enter your website URL"
                   value={demoUrl}
                   onChange={(e) => setDemoUrl(e.target.value)}
                   className="flex-1 h-12 text-lg shadow-lg focus:ring-2 focus:ring-primary/20"
@@ -194,6 +192,32 @@ const Index = () => {
             </div>
           </div>
         </div>
+
+        {/* Highlights Section */}
+        <div id="highlights" className="py-24 sm:py-32">
+          <div className="mx-auto max-w-7xl px-6 lg:px-8">
+            <div className="mx-auto max-w-2xl lg:text-center mb-16">
+              <h2 className="text-lg font-semibold leading-7 text-primary">
+                Why Choose Us
+              </h2>
+              <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+                Trusted by Leading Companies
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {highlights.map((highlight, index) => (
+                <div key={index} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                  <div className="flex items-center gap-4 mb-4">
+                    <CheckCircle className="h-6 w-6 text-primary" />
+                    <h3 className="font-semibold text-lg">{highlight.title}</h3>
+                  </div>
+                  <p className="text-gray-600">{highlight.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </main>
 
       {showChat && websiteId && (
@@ -222,6 +246,33 @@ const features = [
     name: "Secure & Reliable",
     icon: <Shield className="h-6 w-6 text-primary" />,
     description: "Enterprise-grade security with 99.9% uptime guarantee.",
+  },
+];
+
+const highlights = [
+  {
+    title: "Smart AI Integration",
+    description: "Our advanced AI understands context and provides relevant responses to your customers' queries.",
+  },
+  {
+    title: "Easy Setup",
+    description: "Get started in minutes with our simple integration process. No coding required.",
+  },
+  {
+    title: "Customizable",
+    description: "Tailor the chat interface to match your brand's look and feel.",
+  },
+  {
+    title: "Analytics Dashboard",
+    description: "Track customer interactions and gain valuable insights into their needs.",
+  },
+  {
+    title: "Multi-language Support",
+    description: "Connect with customers globally with support for over 50 languages.",
+  },
+  {
+    title: "Cost-effective",
+    description: "Reduce support costs while maintaining high-quality customer service.",
   },
 ];
 
