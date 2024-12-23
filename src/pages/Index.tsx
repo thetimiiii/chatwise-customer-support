@@ -9,9 +9,10 @@ import { ChatWidget } from "@/components/ChatWidget";
 
 const CurledArrow = () => (
   <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary animate-bounce">
-    <path d="M24 36V12M24 36L18 30M24 36L30 30M24 12C20 12 16 16 20 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M24 36V12M24 36L18 30M24 36L30 30M24 12C18 12 12 18 18 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
+
 
 const Index = () => {
   const navigate = useNavigate();
@@ -104,7 +105,7 @@ const Index = () => {
               <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary to-indigo-600 opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"/>
             </div>
             
-            <div className="mb-16">
+            <div className="mb-32">
               <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-7xl">
                 <span className="block mb-4">We don't talk much,</span>
                 <span className="block bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">
