@@ -6,6 +6,7 @@ import { ChatWidget } from "@/components/ChatWidget";
 import { Navigation } from "@/components/landing/Navigation";
 import { Hero } from "@/components/landing/Hero";
 import { features, highlights } from "@/data/landing";
+import { CircleCheck } from "lucide-react"; // Updated import
 
 const Index = () => {
   const navigate = useNavigate();
@@ -142,7 +143,7 @@ const Index = () => {
               {highlights.map((highlight, index) => (
                 <div key={index} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                   <div className="flex items-center gap-4 mb-4">
-                    <CheckCircle className="h-6 w-6 text-primary" />
+                    <CircleCheck className="h-6 w-6 text-primary" /> {/* Updated icon */}
                     <h3 className="font-semibold text-lg">{highlight.title}</h3>
                   </div>
                   <p className="text-gray-600">{highlight.description}</p>
