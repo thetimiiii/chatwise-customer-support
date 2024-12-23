@@ -1,16 +1,15 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowDown, MessageSquare, Zap, Shield, CheckCircle } from "lucide-react";
 import { ChatWidget } from "@/components/ChatWidget";
+import { Navigation } from "@/components/landing/Navigation";
+import { Hero } from "@/components/landing/Hero";
+import { features, highlights } from "@/data/landing";
 
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [demoUrl, setDemoUrl] = useState("");
   const [showChat, setShowChat] = useState(false);
   const [websiteId, setWebsiteId] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -25,12 +24,7 @@ const Index = () => {
     checkUser();
   }, [navigate]);
 
-  const handleSignUp = async () => {
-    navigate("/signup");
-  };
-
-  const handleTryDemo = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleTryDemo = async (demoUrl: string) => {
     if (!demoUrl) {
       toast({
         title: "Please enter a website URL",
@@ -90,79 +84,10 @@ const Index = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-white via-blue-50 to-indigo-50">
-      {/* Navigation */}
-      <nav className="fixed w-full top-0 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex-shrink-0 font-bold text-2xl bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">
-              <a href="/" className="hover:opacity-80 transition-opacity">
-                Chatly
-              </a>
-            </div>
-            <div className="hidden md:flex space-x-8">
-              <a href="#features" className="text-gray-600 hover:text-gray-900">Features</a>
-              <a href="#highlights" className="text-gray-600 hover:text-gray-900">Highlights</a>
-              <a href="#pricing" className="text-gray-600 hover:text-gray-900">Pricing</a>
-            </div>
-            <div className="flex gap-6">
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/login")}
-                className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-              >
-                Login
-              </Button>
-              <Button
-                onClick={handleSignUp}
-                className="bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200 px-6"
-              >
-                Sign Up
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navigation />
 
       <main className="flex-grow pt-16">
-        {/* Hero Section */}
-        <div className="relative isolate px-6 pt-10 lg:px-8">
-          <div className="mx-auto max-w-4xl py-24 sm:py-32 lg:py-40 text-center">
-            <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
-              <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary to-indigo-600 opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"/>
-            </div>
-            
-            <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-7xl mb-8">
-              <span className="block mb-4">We don't talk much,</span>
-              <span className="block bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">
-                but our bot does
-              </span>
-            </h1>
-
-            <div className="mt-12 mb-8 flex justify-center">
-              <ArrowDown className="h-12 w-12 text-primary animate-bounce" />
-            </div>
-            
-            <form onSubmit={handleTryDemo} className="max-w-xl mx-auto">
-              <div className="flex gap-3">
-                <Input
-                  type="url"
-                  placeholder="Enter your website URL"
-                  value={demoUrl}
-                  onChange={(e) => setDemoUrl(e.target.value)}
-                  className="flex-1 h-12 text-lg shadow-lg focus:ring-2 focus:ring-primary/20"
-                  disabled={isLoading}
-                />
-                <Button 
-                  type="submit"
-                  className="h-12 px-8 text-lg bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Setting up..." : "Try it out"}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <Hero onTryDemo={handleTryDemo} isLoading={isLoading} />
 
         {/* Features Section */}
         <div id="features" className="py-24 sm:py-32 bg-white/80 backdrop-blur-md">
@@ -186,7 +111,7 @@ const Index = () => {
                     <div className="rounded-2xl bg-white p-8 shadow-lg ring-1 ring-gray-100/5 w-full h-full">
                       <dt className="flex items-center justify-center gap-x-3 text-xl font-semibold leading-7 text-gray-900 mb-4">
                         <div className="rounded-lg bg-primary/10 p-3 ring-1 ring-primary/20">
-                          {feature.icon}
+                          <feature.icon className="h-6 w-6 text-primary" />
                         </div>
                         {feature.name}
                       </dt>
@@ -238,50 +163,5 @@ const Index = () => {
     </div>
   );
 };
-
-const features = [
-  {
-    name: "24/7 Support",
-    icon: <MessageSquare className="h-6 w-6 text-primary" />,
-    description: "Provide instant support to your customers around the clock with our AI-powered chatbot.",
-  },
-  {
-    name: "Lightning Fast",
-    icon: <Zap className="h-6 w-6 text-primary" />,
-    description: "Get immediate responses to customer queries without any delay.",
-  },
-  {
-    name: "Secure & Reliable",
-    icon: <Shield className="h-6 w-6 text-primary" />,
-    description: "Enterprise-grade security with 99.9% uptime guarantee.",
-  },
-];
-
-const highlights = [
-  {
-    title: "Smart AI Integration",
-    description: "Our advanced AI understands context and provides relevant responses to your customers' queries.",
-  },
-  {
-    title: "Easy Setup",
-    description: "Get started in minutes with our simple integration process. No coding required.",
-  },
-  {
-    title: "Customizable",
-    description: "Tailor the chat interface to match your brand's look and feel.",
-  },
-  {
-    title: "Analytics Dashboard",
-    description: "Track customer interactions and gain valuable insights into their needs.",
-  },
-  {
-    title: "Multi-language Support",
-    description: "Connect with customers globally with support for over 50 languages.",
-  },
-  {
-    title: "Cost-effective",
-    description: "Reduce support costs while maintaining high-quality customer service.",
-  },
-];
 
 export default Index;
