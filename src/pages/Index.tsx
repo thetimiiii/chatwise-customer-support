@@ -25,6 +25,10 @@ const Index = () => {
     checkUser();
   }, [navigate]);
 
+  const handleSignUp = async () => {
+    navigate("/signup");
+  };
+
   const handleTryDemo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!demoUrl) {
@@ -41,7 +45,7 @@ const Index = () => {
       // First, try to sign in as test user
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: 'test@test.com',
-        password: 'test123', // Make sure this matches your test account password
+        password: 'test123',
       });
 
       if (signInError) throw signInError;
@@ -81,7 +85,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-indigo-50">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-white via-blue-50 to-indigo-50">
       {/* Navigation */}
       <nav className="fixed w-full top-0 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -105,7 +109,7 @@ const Index = () => {
                 Login
               </Button>
               <Button
-                onClick={() => navigate("/signup")}
+                onClick={handleSignUp}
                 className="bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200 px-6"
               >
                 Sign Up
@@ -115,7 +119,7 @@ const Index = () => {
         </div>
       </nav>
 
-      <main className="pt-16">
+      <main className="flex-grow pt-16">
         {/* Hero Section */}
         <div className="relative isolate px-6 pt-10 lg:px-8">
           <div className="mx-auto max-w-4xl py-24 sm:py-32 lg:py-40 text-center">
