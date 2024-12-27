@@ -212,46 +212,16 @@
   `;
 
   const updateStyles = (config) => {
-    console.log('Updating widget styles with config:', config);
-    
-    const container = document.querySelector('.lovable-chat-widget');
-    if (!container) {
-      console.warn('Widget container not found');
-      return;
+    const styleId = 'lovable-chat-styles';
+    let styleEl = document.getElementById(styleId);
+
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      document.head.appendChild(styleEl);
     }
 
-    // Update stylesheet
-    let styleElement = document.querySelector('style[data-lovable-chat]');
-    if (!styleElement) {
-      styleElement = document.createElement('style');
-      styleElement.setAttribute('data-lovable-chat', '');
-      document.head.appendChild(styleElement);
-    }
-    styleElement.textContent = generateChatStyles(config.primaryColor);
-
-    // Update dynamic elements
-    const elements = {
-      chatButton: container.querySelector('.lovable-chat-button'),
-      sendButton: container.querySelector('.lovable-chat-input button'),
-      userMessages: container.querySelectorAll('.lovable-message.user'),
-      input: container.querySelector('.lovable-chat-input input')
-    };
-
-    // Update colors with transition
-    [elements.chatButton, elements.sendButton].forEach(button => {
-      if (button) {
-        button.style.backgroundColor = config.primaryColor;
-        button.style.transition = 'all 0.2s ease';
-      }
-    });
-
-    // Update user messages
-    elements.userMessages.forEach(msg => {
-      msg.style.backgroundColor = config.primaryColor;
-      msg.style.transition = 'background-color 0.2s ease';
-    });
-
-    console.log('Styles updated successfully');
+    styleEl.textContent = generateChatStyles(config.primaryColor);
   };
 
   // Chat functionality
@@ -302,11 +272,11 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             message,
             websiteId,
-            token,
           }),
         });
 
@@ -430,7 +400,6 @@
     // Initialize chat and apply styles
     updateStyles(currentConfig);
     initializeChat(container);
-
     console.log('Widget initialized successfully');
   };
 
