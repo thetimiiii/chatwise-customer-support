@@ -31,8 +31,8 @@ const Index = () => {
     try {
       // Sign in as test user
       const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: 'test@test.com',
-        password: 'test123',
+        email: 'sagertim02@gmail.com',
+        password: 'Toff2002',
       });
 
       if (signInError || !authData.user) {
