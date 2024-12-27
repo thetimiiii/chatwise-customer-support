@@ -12,12 +12,9 @@ export default defineConfig({
       formats: ['iife'],
     },
     rollupOptions: {
-      external: ['react', 'react-dom'],
+      external: [],  
       output: {
-        globals: {
-          react: 'React',
-          'react-dom': 'ReactDOM',
-        },
+        globals: {},
       },
     },
   },

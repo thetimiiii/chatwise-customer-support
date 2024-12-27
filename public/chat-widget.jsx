@@ -1,10 +1,11 @@
-import { ChatWidget } from '../src/components/ChatWidget';
 import { createRoot } from 'react-dom/client';
+import { ChatWidget } from '../src/components/ChatWidget';
 
-// Initialize the chat widget
-const initializeWidget = () => {
-  // Get script attributes
-  const scriptTag = document.currentScript || document.querySelector('script[src*="chat-widget.js"]');
+(() => {
+  // Extract website ID and token from script tag
+  const scriptTag = document.currentScript || 
+    document.querySelector('script[src*="widget.js"]');
+  
   if (!scriptTag) {
     console.error('Could not find widget script tag');
     return;
@@ -12,18 +13,24 @@ const initializeWidget = () => {
 
   const websiteId = scriptTag.getAttribute('data-website-id');
   const token = scriptTag.getAttribute('data-token');
-
+  
   if (!websiteId || !token) {
     console.error('Website ID and token are required');
     return;
   }
 
-  // Create container for widget
+  // Create container
   const container = document.createElement('div');
-  container.id = 'lovable-chat-widget';
+  container.className = 'lovable-chat-widget';
   document.body.appendChild(container);
 
-  // Initialize React component
+  // Load Inter font
+  const fontLink = document.createElement('link');
+  fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
+  fontLink.rel = 'stylesheet';
+  document.head.appendChild(fontLink);
+
+  // Initialize React
   const root = createRoot(container);
   root.render(
     <ChatWidget 
@@ -31,7 +38,4 @@ const initializeWidget = () => {
       token={token}
     />
   );
-};
-
-// Initialize when the script loads
-initializeWidget();
+})();

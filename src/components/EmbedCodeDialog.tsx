@@ -13,8 +13,6 @@ export const EmbedCodeDialog = ({ website, open, onOpenChange }: EmbedCodeDialog
   const { toast } = useToast();
 
   const embedCode = `<!-- Lovable Chat Widget -->
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script>
   (function() {
     var script = document.createElement('script');
