@@ -83,115 +83,110 @@ export const ChatWidget = ({
   const handleSendMessage = async () => {
     if (!message.trim()) return;
 
-    try {
-      setIsLoading(true);
-      setMessages((prev) => [...prev, { content: message, isUser: true }]);
-      setMessage("");
+    const userMessage = message.trim();
+    setMessage("");
+    setIsLoading(true);
+    setMessages((prev) => [...prev, { content: userMessage, isUser: true }]);
 
-      const response = token
-        ? await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message, websiteId, token }),
-          }).then(res => {
-            if (!res.ok) throw new Error('Failed to send message');
-            return res.json();
-          }).then(data => data.text)
-        : await getChatResponse(message, websiteId);
+    try {
+      let response;
+      if (token) {
+        // Embedded mode - use API endpoint
+        const apiResponse = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userMessage, websiteId, token }),
+        });
+        
+        if (!apiResponse.ok) throw new Error('Failed to send message');
+        const data = await apiResponse.json();
+        response = data.text;
+      } else {
+        // Dashboard mode - use direct service
+        response = await getChatResponse(userMessage, websiteId);
+      }
 
       setMessages((prev) => [...prev, { content: response, isUser: false }]);
     } catch (error) {
-      console.error("Error sending message:", error);
-      const errorMessage =
-        error instanceof Error && error.message === "No credits remaining"
-          ? "This website has run out of chat credits. Please contact the website owner."
-          : "Failed to send message. Please try again.";
-
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          content: errorMessage,
-          isUser: false,
-        },
-      ]);
+      console.error('Error sending message:', error);
+      setMessages((prev) => [...prev, { 
+        content: 'I apologize, but I am having trouble responding right now. Please try again in a moment.',
+        isUser: false 
+      }]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!isOpen) {
-    return (
-      <Button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 rounded-full h-12 w-12 p-0"
-        style={{ backgroundColor: config.primaryColor }}
-      >
-        <MessageCircle className="h-6 w-6 text-white" />
-      </Button>
-    );
-  }
-
   return (
-    <div className="fixed bottom-4 right-4 w-96 h-[500px] bg-white rounded-lg shadow-lg flex flex-col">
-      <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-        <h3 className="font-semibold text-gray-900">Chat Support</h3>
-        <Button variant="ghost" size="icon" onClick={() => {
-          setIsOpen(false);
-          onClose?.();
-        }}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+    <div className="fixed bottom-4 right-4 flex flex-col items-end z-50">
+      <Button
+        size="icon"
+        onClick={() => setIsOpen(true)}
+        style={{ backgroundColor: config.primaryColor }}
+        className={`h-12 w-12 rounded-full shadow-lg ${!isOpen ? 'flex' : 'hidden'}`}
+      >
+        <MessageCircle className="h-6 w-6" />
+      </Button>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex ${msg.isUser ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[80%] rounded-lg p-3 ${
-                msg.isUser ? "text-white" : "bg-gray-100 text-gray-900"
-              }`}
-              style={{ backgroundColor: msg.isUser ? config.primaryColor : undefined }}
+      {isOpen && (
+        <div className="bg-white rounded-lg shadow-xl w-[350px] h-[500px] flex flex-col border border-gray-200">
+          <div className="p-4 border-b flex justify-between items-center">
+            <h3 className="font-semibold text-gray-900">Chat Support</h3>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => {
+                setIsOpen(false);
+                onClose?.();
+              }}
+              className="h-8 w-8"
             >
-              {msg.content}
-            </div>
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-        ))}
-      </div>
 
-      <div className="p-4 border-t bg-white">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSendMessage();
-          }}
-          className="flex gap-2"
-        >
-          <Input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type your message..."
-            disabled={isLoading}
-            className="flex-1"
-          />
-          <Button
-            type="submit"
-            disabled={isLoading}
-            style={{ backgroundColor: config.primaryColor }}
-            className="text-white px-4"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
-        </form>
-      </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.map((msg, i) => (
+              <div
+                key={i}
+                className={`max-w-[85%] p-3 rounded-lg ${
+                  msg.isUser
+                    ? 'ml-auto text-white rounded-br-sm'
+                    : 'mr-auto bg-gray-100 text-gray-900 rounded-bl-sm'
+                }`}
+                style={{ backgroundColor: msg.isUser ? config.primaryColor : undefined }}
+              >
+                {msg.content}
+              </div>
+            ))}
+          </div>
+
+          <div className="p-4 border-t flex gap-2">
+            <Input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
+              placeholder="Type your message..."
+              disabled={isLoading}
+              className="flex-1"
+            />
+            <Button
+              size="icon"
+              onClick={handleSendMessage}
+              disabled={isLoading || !message.trim()}
+              style={{ backgroundColor: config.primaryColor }}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

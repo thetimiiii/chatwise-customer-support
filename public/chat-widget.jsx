@@ -1,5 +1,5 @@
 import { createRoot } from 'react-dom/client';
-import { EmbedChatWidget } from '../src/components/EmbedChatWidget';
+import { ChatWidget } from '../src/components/ChatWidget';
 import '@/styles/globals.css'; // Include all Tailwind and shadcn styles
 
 (() => {
@@ -34,7 +34,7 @@ import '@/styles/globals.css'; // Include all Tailwind and shadcn styles
   // Initialize React
   const root = createRoot(container);
   root.render(
-    <EmbedChatWidget 
+    <ChatWidget 
       websiteId={websiteId}
       token={token}
     />
