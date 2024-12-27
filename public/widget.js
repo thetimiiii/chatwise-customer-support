@@ -330,7 +330,7 @@
   };
 
   // Initialize widget
-  const initializeWidget = () => {
+  const initializeWidget = async () => {
     console.log('Initializing widget...');
     
     // Extract website ID from script tag
@@ -348,13 +348,18 @@
       return;
     }
 
-    // Fetch initial config
-    const config = {
-      primaryColor: '#2563eb',
-      preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
-    };
-
-    updateConfig(config);
+    try {
+      // Fetch website configuration
+      const response = await fetch(`/api/websites/${websiteId}/config`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch website configuration');
+      }
+      const config = await response.json();
+      updateConfig(config);
+    } catch (error) {
+      console.error('Error fetching website config:', error);
+      // Use default config if fetch fails
+    }
 
     // Create widget HTML
     const container = document.createElement('div');
@@ -373,7 +378,12 @@
         <div class="lovable-chat-messages"></div>
         <div class="lovable-chat-input">
           <input type="text" placeholder="Type your message...">
-          <button>Send</button>
+          <button>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
         </div>
       </div>
     `;
@@ -387,7 +397,7 @@
     document.head.appendChild(fontLink);
 
     // Initialize chat and apply styles
-    updateStyles(config);
+    updateStyles(currentConfig);
     initializeChat(container);
 
     // Listen for configuration updates
