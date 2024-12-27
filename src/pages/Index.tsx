@@ -1,76 +1,45 @@
-const handleTryDemo = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!demoUrl) {
-    toast({
-      title: "Invalid URL",
-      description: "Please enter a website URL to continue",
-      variant: "destructive",
-    });
-    return;
-  }
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowDown } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { ChatWidget } from "@/components/ChatWidget";
 
-  // Validate URL format
-  try {
-    new URL(demoUrl);
-  } catch {
-    toast({
-      title: "Invalid URL format",
-      description: "Please enter a valid URL (e.g., https://example.com)",
-      variant: "destructive",
-    });
-    return;
-  }
+const Index = () => {
+  const [demoUrl, setDemoUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [websiteId, setWebsiteId] = useState<string | null>(null);
+  const [showChat, setShowChat] = useState(false);
+  const { toast } = useToast();
 
-  setIsLoading(true);
-
-  try {
-    console.log("Starting demo setup for URL:", demoUrl);
-
-    // Step 1: Sign in as test user
-    console.log("Attempting to sign in as test user...");
-    const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-      email: 'test@test.com',
-      password: 'test123',
-    });
-
-    if (signInError) {
-      console.error("Auth error details:", {
-        message: signInError.message,
-        status: signInError.status,
-        name: signInError.name
+  const handleTryDemo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Basic URL validation
+    if (!demoUrl) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a website URL to continue",
+        variant: "destructive",
       });
-      throw new Error(`Authentication failed: ${signInError.message}`);
+      return;
     }
 
-    if (!authData.user) {
-      console.error("No user data received after successful auth");
-      throw new Error('Failed to get user data after authentication');
-    }
+    setIsLoading(true);
 
-    console.log("Successfully signed in as test user:", authData.user.id);
+    try {
+      // Sign in as test user
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+        email: 'test@test.com',
+        password: 'test123',
+      });
 
-    // Step 2: Check if website already exists
-    console.log("Checking for existing website entry...");
-    const { data: existingWebsite, error: existingError } = await supabase
-      .from('websites')
-      .select('id')
-      .eq('url', demoUrl)
-      .eq('user_id', authData.user.id)
-      .single();
+      if (signInError || !authData.user) {
+        throw new Error('Authentication failed');
+      }
 
-    if (existingError && existingError.code !== 'PGRST116') { // PGRST116 is "not found" error
-      console.error("Error checking existing website:", existingError);
-      throw new Error(`Database query failed: ${existingError.message}`);
-    }
-
-    let websiteId;
-
-    if (existingWebsite) {
-      console.log("Found existing website entry:", existingWebsite.id);
-      websiteId = existingWebsite.id;
-    } else {
-      // Step 3: Create new website entry
-      console.log("Creating new website entry...");
+      // Create website entry
       const { data: website, error: websiteError } = await supabase
         .from('websites')
         .insert({
@@ -79,79 +48,87 @@ const handleTryDemo = async (e: React.FormEvent) => {
           user_id: authData.user.id,
           config: {
             primaryColor: "#2563eb",
-            preamble: `You are a helpful customer support agent for the website ${demoUrl}. Be concise and friendly in your responses.`
+            preamble: `You are a helpful customer support agent for ${demoUrl}. Be concise and friendly in your responses.`
           }
         })
         .select()
         .single();
 
-      if (websiteError) {
-        console.error("Website creation error:", {
-          message: websiteError.message,
-          code: websiteError.code,
-          details: websiteError.details
-        });
-        throw new Error(`Failed to create website entry: ${websiteError.message}`);
+      if (websiteError || !website) {
+        throw new Error('Failed to create website entry');
       }
 
-      console.log("Successfully created website entry:", website.id);
-      websiteId = website.id;
+      setWebsiteId(website.id);
+      setShowChat(true);
+      
+      toast({
+        title: "Demo Ready",
+        description: "Click the chat button in the bottom right corner to start chatting.",
+      });
+    } catch (error) {
+      console.error("Demo setup failed:", error);
+      toast({
+        title: "Setup Failed",
+        description: "Unable to set up the demo. Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    // Step 4: Verify credits
-    console.log("Checking available credits...");
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('credits_remaining')
-      .eq('id', authData.user.id)
-      .single();
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <main className="flex-grow pt-16">
+        <div className="relative isolate px-6 pt-10 lg:px-8">
+          <div className="mx-auto max-w-4xl py-24 sm:py-32 lg:py-40 text-center">
+            <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
+              <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary to-indigo-600 opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"/>
+            </div>
+            
+            <h1 className="text-5xl font-bold tracking-tight text-gray-900 sm:text-7xl mb-8">
+              <span className="block mb-4">We don't talk much,</span>
+              <span className="block bg-gradient-to-r from-primary to-indigo-600 bg-clip-text text-transparent">
+                but our bot does
+              </span>
+            </h1>
 
-    if (profileError) {
-      console.error("Error checking credits:", profileError);
-      throw new Error(`Failed to check credits: ${profileError.message}`);
-    }
+            <div className="mt-12 mb-8 flex justify-center">
+              <ArrowDown className="h-12 w-12 text-primary animate-bounce" />
+            </div>
+            
+            <form onSubmit={handleTryDemo} className="max-w-xl mx-auto">
+              <div className="flex gap-3">
+                <Input
+                  type="url"
+                  placeholder="Enter your website URL"
+                  value={demoUrl}
+                  onChange={(e) => setDemoUrl(e.target.value)}
+                  className="flex-1 h-12 text-lg shadow-lg focus:ring-2 focus:ring-primary/20"
+                  disabled={isLoading}
+                />
+                <Button 
+                  type="submit"
+                  className="h-12 px-8 text-lg bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Setting up..." : "Try it out"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
 
-    if (!profile || profile.credits_remaining <= 0) {
-      console.error("No credits available:", profile);
-      throw new Error('No chat credits available for the demo');
-    }
-
-    console.log("Credits available:", profile.credits_remaining);
-
-    // Step 5: Setup successful
-    setWebsiteId(websiteId);
-    setShowChat(true);
-    toast({
-      title: "Demo Ready!",
-      description: "Click the chat button in the bottom right corner to start chatting.",
-    });
-
-  } catch (error) {
-    console.error("Demo setup failed:", error);
-    
-    // Provide specific error messages based on the error type
-    let errorTitle = "Setup Failed";
-    let errorDescription = "An unexpected error occurred.";
-
-    if (error instanceof Error) {
-      if (error.message.includes("Authentication failed")) {
-        errorTitle = "Authentication Error";
-        errorDescription = "The demo system is currently unavailable. Please try again later.";
-      } else if (error.message.includes("No chat credits")) {
-        errorTitle = "No Credits Available";
-        errorDescription = "The demo account has run out of credits. Please try again later.";
-      } else if (error.message.includes("Failed to create website")) {
-        errorTitle = "Website Registration Failed";
-        errorDescription = "Unable to register the website for demo. Please check the URL and try again.";
-      }
-    }
-
-    toast({
-      title: errorTitle,
-      description: errorDescription,
-      variant: "destructive",
-    });
-  } finally {
-    setIsLoading(false);
-  }
+        {websiteId && showChat && (
+          <ChatWidget
+            websiteId={websiteId}
+            primaryColor="#2563eb"
+            preamble={`You are a helpful customer support agent for ${demoUrl}. Be concise and friendly in your responses.`}
+          />
+        )}
+      </main>
+    </div>
+  );
 };
+
+export default Index;
