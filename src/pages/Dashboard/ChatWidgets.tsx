@@ -3,13 +3,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, Settings } from "lucide-react";
+import { Trash2, Settings, MessageCircle } from "lucide-react";
 import { EmbedCodeDialog } from "@/components/EmbedCodeDialog";
 import { Website, isWebsiteConfig } from "@/integrations/supabase/types/website";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChatWidget } from "@/components/ChatWidget";
 import { HexColorPicker } from "react-colorful";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export default function ChatWidgets() {
   const [websites, setWebsites] = useState<Website[]>([]);
@@ -17,14 +18,11 @@ export default function ChatWidgets() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedWebsite, setSelectedWebsite] = useState<Website | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isCustomizing, setIsCustomizing] = useState(false);
   const { toast } = useToast();
 
-  // Add state for customization
-  const [primaryColor, setPrimaryColor] = useState("#2563eb");
-  const [preamble, setPreamble] = useState(
-    "You are a helpful customer support agent. Be concise and friendly in your responses."
-  );
+  // Track color changes per website
+  const [websiteColors, setWebsiteColors] = useState<Record<string, string>>({});
+  const [websitePreambles, setWebsitePreambles] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const fetchWebsites = async () => {
@@ -55,6 +53,16 @@ export default function ChatWidgets() {
       }));
 
       setWebsites(validWebsites);
+      
+      // Initialize colors and preambles
+      const colors: Record<string, string> = {};
+      const preambles: Record<string, string> = {};
+      validWebsites.forEach(website => {
+        colors[website.id] = website.config.primaryColor;
+        preambles[website.id] = website.config.preamble;
+      });
+      setWebsiteColors(colors);
+      setWebsitePreambles(preambles);
     };
 
     fetchWebsites();
@@ -105,11 +113,11 @@ export default function ChatWidgets() {
         .select()
         .single();
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       setWebsites(prev => [website, ...prev]);
+      setWebsiteColors(prev => ({ ...prev, [website.id]: website.config.primaryColor }));
+      setWebsitePreambles(prev => ({ ...prev, [website.id]: website.config.preamble }));
       setNewWebsiteUrl("");
       toast({
         title: "Success",
@@ -137,12 +145,20 @@ export default function ChatWidgets() {
           .delete()
           .eq("id", id);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
-        // Immediately update the UI
         setWebsites(prev => prev.filter(website => website.id !== id));
+        setWebsiteColors(prev => {
+          const newColors = { ...prev };
+          delete newColors[id];
+          return newColors;
+        });
+        setWebsitePreambles(prev => {
+          const newPreambles = { ...prev };
+          delete newPreambles[id];
+          return newPreambles;
+        });
+
         toast({
           title: "Success",
           description: "Website deleted successfully",
@@ -166,52 +182,71 @@ export default function ChatWidgets() {
     setIsDialogOpen(true);
   };
 
-  const handleCustomize = (website: Website) => {
-    setSelectedWebsite(website);
-    setPrimaryColor(website.config.primaryColor);
-    setPreamble(website.config.preamble);
-    setIsCustomizing(true);
-  };
-
-  const handleSaveCustomization = async () => {
-    if (!selectedWebsite) return;
-
-    setIsLoading(true);
+  const handleColorChange = async (websiteId: string, color: string) => {
+    setWebsiteColors(prev => ({ ...prev, [websiteId]: color }));
+    
     try {
+      const website = websites.find(w => w.id === websiteId);
+      if (!website) return;
+
       const { error } = await supabase
         .from("websites")
         .update({
           config: {
-            primaryColor,
-            preamble
+            ...website.config,
+            primaryColor: color,
           }
         })
-        .eq("id", selectedWebsite.id);
+        .eq("id", websiteId);
 
       if (error) throw error;
 
-      // Update local state
-      setWebsites(prev => prev.map(website => 
-        website.id === selectedWebsite.id 
-          ? { ...website, config: { primaryColor, preamble } }
-          : website
+      setWebsites(prev => prev.map(w => 
+        w.id === websiteId 
+          ? { ...w, config: { ...w.config, primaryColor: color } }
+          : w
       ));
-
-      toast({
-        title: "Success",
-        description: "Widget customization saved successfully",
-      });
-      setIsCustomizing(false);
-      setSelectedWebsite(null);
     } catch (error) {
-      console.error("Error saving customization:", error);
+      console.error("Error updating color:", error);
       toast({
         title: "Error",
-        description: "Failed to save customization",
+        description: "Failed to update widget color",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
+    }
+  };
+
+  const handlePreambleChange = async (websiteId: string, preamble: string) => {
+    setWebsitePreambles(prev => ({ ...prev, [websiteId]: preamble }));
+    
+    try {
+      const website = websites.find(w => w.id === websiteId);
+      if (!website) return;
+
+      const { error } = await supabase
+        .from("websites")
+        .update({
+          config: {
+            ...website.config,
+            preamble,
+          }
+        })
+        .eq("id", websiteId);
+
+      if (error) throw error;
+
+      setWebsites(prev => prev.map(w => 
+        w.id === websiteId 
+          ? { ...w, config: { ...w.config, preamble } }
+          : w
+      ));
+    } catch (error) {
+      console.error("Error updating preamble:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update widget preamble",
+        variant: "destructive",
+      });
     }
   };
 
@@ -232,25 +267,55 @@ export default function ChatWidgets() {
         </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Website List */}
-        <div className="space-y-4">
-          {websites.map((website) => (
-            <Card key={website.id} className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <h3 className="font-medium">{website.name}</h3>
-                  <p className="text-sm text-gray-500">{website.url}</p>
+      <div className="space-y-4">
+        {websites.map((website) => (
+          <Card key={website.id} className="relative">
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="w-4 h-4 rounded-full border"
+                    style={{ backgroundColor: websiteColors[website.id] || website.config.primaryColor }}
+                  />
+                  <div>
+                    <CardTitle className="text-lg">{website.name}</CardTitle>
+                    <p className="text-sm text-muted-foreground">{website.url}</p>
+                  </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    onClick={() => handleCustomize(website)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Settings className="h-4 w-4 mr-1" />
-                    Customize
-                  </Button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Settings className="h-4 w-4 mr-1" />
+                        Customize
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4" align="end">
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Widget Color</label>
+                          <HexColorPicker 
+                            color={websiteColors[website.id] || website.config.primaryColor} 
+                            onChange={(color) => handleColorChange(website.id, color)}
+                          />
+                          <Input
+                            value={websiteColors[website.id] || website.config.primaryColor}
+                            onChange={(e) => handleColorChange(website.id, e.target.value)}
+                            className="mt-2"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Chat Bot Preamble</label>
+                          <Textarea
+                            value={websitePreambles[website.id] || website.config.preamble}
+                            onChange={(e) => handlePreambleChange(website.id, e.target.value)}
+                            rows={3}
+                            className="resize-none"
+                          />
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <Button
                     onClick={() => handleShowEmbedCode(website)}
                     variant="outline"
@@ -268,74 +333,32 @@ export default function ChatWidgets() {
                   </Button>
                 </div>
               </div>
-              
-              {/* Preview Widget */}
-              <div className="mt-4 border rounded p-4 bg-gray-50">
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-lg p-4 bg-gray-50">
                 <ChatWidget
                   websiteId={website.id}
-                  config={website.config}
+                  config={{
+                    primaryColor: websiteColors[website.id] || website.config.primaryColor,
+                    preamble: websitePreambles[website.id] || website.config.preamble,
+                  }}
                   previewMode={true}
                 />
               </div>
-            </Card>
-          ))}
-        </div>
-
-        {/* Customization Panel */}
-        {isCustomizing && selectedWebsite && (
-          <Card className="p-6 space-y-4">
-            <h3 className="font-medium">Customize Widget</h3>
-            <div>
-              <label className="block text-sm font-medium mb-2">Primary Color</label>
-              <HexColorPicker color={primaryColor} onChange={setPrimaryColor} />
-              <Input
-                value={primaryColor}
-                onChange={(e) => setPrimaryColor(e.target.value)}
-                className="mt-2"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Chat Bot Preamble</label>
-              <Textarea
-                value={preamble}
-                onChange={(e) => setPreamble(e.target.value)}
-                rows={3}
-                className="resize-none"
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <Button onClick={handleSaveCustomization} disabled={isLoading}>
-                Save Changes
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setIsCustomizing(false);
-                  setSelectedWebsite(null);
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
-
-            {/* Live Preview */}
-            <div className="mt-4 border rounded p-4 bg-gray-50">
-              <h4 className="text-sm font-medium mb-2">Live Preview</h4>
-              <ChatWidget
-                websiteId={selectedWebsite.id}
-                config={{ primaryColor, preamble }}
-                previewMode={true}
-              />
-            </div>
+            </CardContent>
           </Card>
-        )}
+        ))}
       </div>
 
       {selectedWebsite && (
         <EmbedCodeDialog
-          website={selectedWebsite}
+          website={{
+            ...selectedWebsite,
+            config: {
+              primaryColor: websiteColors[selectedWebsite.id] || selectedWebsite.config.primaryColor,
+              preamble: websitePreambles[selectedWebsite.id] || selectedWebsite.config.preamble,
+            }
+          }}
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
         />
