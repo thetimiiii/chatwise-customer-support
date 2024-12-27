@@ -7,6 +7,8 @@ import { getChatResponse } from "@/services/chatService";
 import { supabase } from "@/integrations/supabase/client";
 import { WebsiteConfig } from "@/integrations/supabase/types/website";
 
+const DASHBOARD_URL = "https://www.simplesupportbot.com";
+
 interface Message {
   content: string;
   isUser: boolean;
@@ -39,7 +41,9 @@ export const ChatWidget = ({
     if (token) {
       const fetchConfig = async () => {
         try {
-          const response = await fetch(`/api/websites/${websiteId}/config?token=${token}`);
+          const response = await fetch(
+            `${DASHBOARD_URL}/api/websites/${websiteId}/config?token=${token}`
+          );
           if (!response.ok) {
             throw new Error('Failed to fetch website configuration');
           }
@@ -92,7 +96,7 @@ export const ChatWidget = ({
       let response;
       if (token) {
         // Embedded mode - use API endpoint
-        const apiResponse = await fetch('/api/chat', {
+        const apiResponse = await fetch(`${DASHBOARD_URL}/api/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: userMessage, websiteId, token }),
