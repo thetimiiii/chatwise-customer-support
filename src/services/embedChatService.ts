@@ -5,12 +5,10 @@ export const createEmbedChatService = (supabase: SupabaseClient<Database>) => {
   return {
     getChatResponse: async (message: string, websiteId: string) => {
       try {
-        console.log('Starting embed chat request:', { message, websiteId });
-        
-        // Get the website's user_id to update their credits
+        // Get the website config for the preamble
         const { data: website, error: websiteError } = await supabase
           .from('websites')
-          .select('user_id')
+          .select('config')
           .eq('id', websiteId)
           .single();
 
@@ -19,24 +17,7 @@ export const createEmbedChatService = (supabase: SupabaseClient<Database>) => {
           throw new Error('Failed to verify website');
         }
 
-        // Check credits before making the API call
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('credits_remaining')
-          .eq('id', website.user_id)
-          .single();
-
-        if (profileError || !profile) {
-          console.error('Credit check failed:', profileError);
-          throw new Error('Failed to check credits');
-        }
-
-        if (profile.credits_remaining <= 0) {
-          console.error('No credits remaining for user');
-          throw new Error('No credits remaining');
-        }
-
-        // Make the API call
+        // Make the API call to Cohere
         const response = await fetch('https://api.cohere.ai/v1/chat', {
           method: 'POST',
           headers: {
@@ -46,7 +27,7 @@ export const createEmbedChatService = (supabase: SupabaseClient<Database>) => {
           body: JSON.stringify({
             message,
             model: 'command',
-            preamble: "You are a helpful customer support agent. Be concise and friendly in your responses.",
+            preamble: website.config?.preamble || "You are a helpful customer support agent. Be concise and friendly in your responses.",
           }),
         });
 
@@ -56,16 +37,6 @@ export const createEmbedChatService = (supabase: SupabaseClient<Database>) => {
         }
 
         const data = await response.json();
-
-        // Decrement credits after successful response
-        const { error: updateError } = await supabase.rpc('decrement_credits', {
-          user_id: website.user_id
-        });
-
-        if (updateError) {
-          console.error('Error updating credits:', updateError);
-          // Continue anyway since we got the response
-        }
 
         // Track the chat session
         const { error: sessionError } = await supabase

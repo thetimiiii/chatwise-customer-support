@@ -33,8 +33,9 @@ export const EmbedChatWidget = ({
   const supabase = createEmbedClient(websiteId, token);
   const chatService = createEmbedChatService(supabase);
 
-  // Fetch initial config
+  // Subscribe to config changes
   useEffect(() => {
+    // Initial fetch
     const fetchConfig = async () => {
       try {
         const { data: website, error } = await supabase
@@ -51,26 +52,47 @@ export const EmbedChatWidget = ({
     };
 
     fetchConfig();
+
+    // Subscribe to changes
+    const subscription = supabase
+      .channel('public:websites')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'websites',
+          filter: `id=eq.${websiteId}`,
+        },
+        (payload: any) => {
+          console.log('Config updated:', payload.new.config);
+          if (payload.new.config) {
+            setConfig(payload.new.config);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [websiteId, supabase]);
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
 
-    try {
-      setIsLoading(true);
-      setMessages((prev) => [...prev, { content: message, isUser: true }]);
-      setMessage("");
+    const userMessage = message.trim();
+    setMessage("");
+    setIsLoading(true);
+    setMessages((prev) => [...prev, { content: userMessage, isUser: true }]);
 
-      const response = await chatService.getChatResponse(message, websiteId);
-      
+    try {
+      const response = await chatService.getChatResponse(userMessage, websiteId);
       setMessages((prev) => [...prev, { content: response, isUser: false }]);
     } catch (error) {
       console.error('Error sending message:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred';
       setMessages((prev) => [...prev, { 
-        content: errorMessage === 'No credits remaining'
-          ? 'This website has run out of chat credits. Please contact the website owner.'
-          : 'Failed to send message. Please try again.',
+        content: 'I apologize, but I am having trouble responding right now. Please try again in a moment.',
         isUser: false 
       }]);
     } finally {
