@@ -42,7 +42,14 @@ export const ChatWidget = ({
       const fetchConfig = async () => {
         try {
           const response = await fetch(
-            `${DASHBOARD_URL}/api/websites/${websiteId}/config?token=${token}`
+            `${DASHBOARD_URL}/api/websites/${websiteId}/config?token=${token}`,
+            {
+              headers: {
+                'Origin': window.location.origin,
+              },
+              credentials: 'include',
+              mode: 'cors',
+            }
           );
           if (!response.ok) {
             throw new Error('Failed to fetch website configuration');
@@ -98,7 +105,12 @@ export const ChatWidget = ({
         // Embedded mode - use API endpoint
         const apiResponse = await fetch(`${DASHBOARD_URL}/api/chat`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Origin': window.location.origin,
+          },
+          credentials: 'include',
+          mode: 'cors',
           body: JSON.stringify({ message: userMessage, websiteId, token }),
         });
         

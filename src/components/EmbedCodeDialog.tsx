@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Website } from "@/integrations/supabase/types/website";
 
+const DASHBOARD_URL = "https://www.simplesupportbot.com";
+
 interface EmbedCodeDialogProps {
   website: Website;
   open: boolean;
@@ -16,7 +18,7 @@ export const EmbedCodeDialog = ({ website, open, onOpenChange }: EmbedCodeDialog
 <script>
   (function() {
     var script = document.createElement('script');
-    script.src = "${window.location.origin}/widget.js";
+    script.src = "${DASHBOARD_URL}/widget.js";
     script.setAttribute('data-website-id', '${website.id}');
     script.setAttribute('data-token', '${website.embed_token}');
     script.async = true;
