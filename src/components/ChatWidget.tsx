@@ -14,6 +14,7 @@ interface Message {
 
 interface ChatWidgetProps {
   websiteId: string;
+  token?: string;
   onClose?: () => void;
   primaryColor?: string;
   preamble?: string;
@@ -21,6 +22,7 @@ interface ChatWidgetProps {
 
 export const ChatWidget = ({
   websiteId,
+  token,
   onClose,
   primaryColor = "#2563eb",
   preamble = "You are a helpful customer support agent. Be concise and friendly in your responses.",
@@ -29,45 +31,54 @@ export const ChatWidget = ({
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [config, setConfig] = useState<WebsiteConfig>({ primaryColor, preamble });
   const { toast } = useToast();
 
+  // Fetch initial config if token is provided (embedded mode)
   useEffect(() => {
-    const broadcastConfig = () => {
-      console.log("Broadcasting config update:", { primaryColor, preamble });
-      window.postMessage(
-        {
-          type: "lovable-chat-config-update",
-          config: {
-            primaryColor,
-            preamble,
-          } satisfies WebsiteConfig,
-        },
-        "*"
-      );
-    };
-
-    broadcastConfig();
-
-    const updateConfig = async () => {
-      try {
-        const { error } = await supabase
-          .from("websites")
-          .update({
-            config: { primaryColor, preamble } satisfies WebsiteConfig,
-          })
-          .eq("id", websiteId);
-
-        if (error) {
-          console.error("Error updating chat config:", error);
-          throw error;
+    if (token) {
+      const fetchConfig = async () => {
+        try {
+          const response = await fetch(`/api/websites/${websiteId}/config?token=${token}`);
+          if (!response.ok) {
+            throw new Error('Failed to fetch website configuration');
+          }
+          const config = await response.json();
+          setConfig(config);
+        } catch (error) {
+          console.error('Error fetching website config:', error);
         }
-      } catch (error) {
-        console.error("Error updating chat config:", error);
-      }
-    };
+      };
+      fetchConfig();
+    } else {
+      // In dashboard mode, use props directly
+      setConfig({ primaryColor, preamble });
+    }
+  }, [websiteId, token, primaryColor, preamble]);
 
-    updateConfig();
-  }, [websiteId, primaryColor, preamble]);
+  // Update config in dashboard mode
+  useEffect(() => {
+    if (!token) {
+      const updateConfig = async () => {
+        try {
+          const { error } = await supabase
+            .from("websites")
+            .update({
+              config: { primaryColor, preamble } satisfies WebsiteConfig,
+            })
+            .eq("id", websiteId);
+
+          if (error) {
+            console.error("Error updating chat config:", error);
+            throw error;
+          }
+        } catch (error) {
+          console.error("Error updating chat config:", error);
+        }
+      };
+      updateConfig();
+    }
+  }, [websiteId, primaryColor, preamble, token]);
 
   const handleSendMessage = async () => {
     if (!message.trim()) return;
@@ -77,7 +88,17 @@ export const ChatWidget = ({
       setMessages((prev) => [...prev, { content: message, isUser: true }]);
       setMessage("");
 
-      const response = await getChatResponse(message, websiteId);
+      const response = token
+        ? await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, websiteId, token }),
+          }).then(res => {
+            if (!res.ok) throw new Error('Failed to send message');
+            return res.json();
+          }).then(data => data.text)
+        : await getChatResponse(message, websiteId);
+
       setMessages((prev) => [...prev, { content: response, isUser: false }]);
     } catch (error) {
       console.error("Error sending message:", error);
@@ -109,7 +130,7 @@ export const ChatWidget = ({
       <Button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-4 right-4 rounded-full h-12 w-12 p-0"
-        style={{ backgroundColor: primaryColor }}
+        style={{ backgroundColor: config.primaryColor }}
       >
         <MessageCircle className="h-6 w-6 text-white" />
       </Button>
@@ -120,7 +141,10 @@ export const ChatWidget = ({
     <div className="fixed bottom-4 right-4 w-96 h-[500px] bg-white rounded-lg shadow-lg flex flex-col">
       <div className="p-4 border-b flex justify-between items-center bg-gray-50">
         <h3 className="font-semibold text-gray-900">Chat Support</h3>
-        <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+        <Button variant="ghost" size="icon" onClick={() => {
+          setIsOpen(false);
+          onClose?.();
+        }}>
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -135,7 +159,7 @@ export const ChatWidget = ({
               className={`max-w-[80%] rounded-lg p-3 ${
                 msg.isUser ? "text-white" : "bg-gray-100 text-gray-900"
               }`}
-              style={{ backgroundColor: msg.isUser ? primaryColor : undefined }}
+              style={{ backgroundColor: msg.isUser ? config.primaryColor : undefined }}
             >
               {msg.content}
             </div>
@@ -161,7 +185,7 @@ export const ChatWidget = ({
           <Button
             type="submit"
             disabled={isLoading}
-            style={{ backgroundColor: primaryColor }}
+            style={{ backgroundColor: config.primaryColor }}
             className="text-white px-4"
           >
             <Send className="h-4 w-4" />
