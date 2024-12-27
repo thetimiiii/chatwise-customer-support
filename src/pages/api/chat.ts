@@ -8,26 +8,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { message, websiteId } = req.body;
+    const { message, websiteId, token } = req.body;
 
-    if (!message) {
-      return res.status(400).json({ message: 'Message is required' });
+    if (!message || !websiteId || !token) {
+      return res.status(400).json({ message: 'Message, website ID, and token are required' });
     }
 
-    if (!websiteId) {
-      return res.status(400).json({ message: 'Website ID is required' });
-    }
-
-    // Verify website exists
+    // Verify website exists and token is valid
     const { data: website, error: websiteError } = await supabase
       .from('websites')
-      .select('id')
+      .select('id, embed_token')
       .eq('id', websiteId)
       .single();
 
     if (websiteError || !website) {
       console.error('Website verification failed:', websiteError);
       return res.status(404).json({ message: 'Website not found' });
+    }
+
+    if (website.embed_token !== token) {
+      return res.status(401).json({ message: 'Invalid token' });
     }
 
     const response = await getChatResponse(message, websiteId);
@@ -40,20 +40,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(402).json({ 
         message: 'No credits remaining',
         details: 'This website has run out of chat credits. Please contact the website owner to purchase more credits.'
-      });
-    }
-
-    if (errorMessage === 'Failed to verify website') {
-      return res.status(404).json({ 
-        message: 'Website not found',
-        details: 'The specified website could not be found. Please check your configuration.'
-      });
-    }
-
-    if (errorMessage === 'Failed to check credits') {
-      return res.status(500).json({ 
-        message: 'Credit check failed',
-        details: 'Unable to verify available credits. Please try again later.'
       });
     }
 

@@ -6,12 +6,13 @@
     primaryColor: '#2563eb',
     preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
   };
-
   let websiteId = null;
+  let token = null;
 
   const updateConfig = (newConfig) => {
     console.log('Updating widget config:', newConfig);
     Object.assign(currentConfig, newConfig);
+    updateStyles(currentConfig);
     return currentConfig;
   };
 
@@ -52,13 +53,14 @@
       width: 350px;
       height: 500px;
       background: white;
-      border-radius: 16px;
+      border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
       display: none;
       flex-direction: column;
       overflow: hidden;
       font-family: 'Inter', system-ui, -apple-system, sans-serif;
       transition: all 0.3s ease;
+      border: 1px solid #e2e8f0;
     }
 
     .lovable-chat-window.open {
@@ -85,14 +87,20 @@
       background: none;
       border: none;
       color: #64748b;
-      font-size: 24px;
       cursor: pointer;
       padding: 4px;
       line-height: 1;
       transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
     }
 
     .lovable-close-button:hover {
+      background-color: #f1f5f9;
       color: #475569;
     }
 
@@ -109,10 +117,10 @@
     .lovable-message {
       max-width: 85%;
       padding: 12px 16px;
-      border-radius: 16px;
+      border-radius: 12px;
       font-size: 14px;
       line-height: 1.5;
-      transition: all 0.2s ease;
+      animation: fadeIn 0.3s ease;
     }
 
     .lovable-message.user {
@@ -155,7 +163,9 @@
     }
 
     .lovable-chat-input button {
-      padding: 10px 16px;
+      padding: 10px;
+      width: 36px;
+      height: 36px;
       background: ${primaryColor};
       color: white;
       border: none;
@@ -179,6 +189,17 @@
       background: #94a3b8;
       cursor: not-allowed;
       transform: none;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     @media (max-width: 640px) {
@@ -249,6 +270,7 @@
     // Event handlers
     elements.chatButton.addEventListener('click', () => {
       elements.chatWindow.classList.add('open');
+      elements.input.focus();
       console.log('Chat window opened');
     });
     
@@ -259,7 +281,7 @@
 
     const sendMessage = async () => {
       const message = elements.input.value.trim();
-      if (!message) return;
+      if (!message || !websiteId || !token) return;
 
       elements.input.disabled = true;
       elements.sendButton.disabled = true;
@@ -275,7 +297,7 @@
 
         elements.input.value = '';
 
-        // Send message to our backend service instead of Cohere directly
+        // Send message to our backend service
         const response = await fetch('/api/chat', {
           method: 'POST',
           headers: {
@@ -284,16 +306,17 @@
           body: JSON.stringify({
             message,
             websiteId,
+            token,
           }),
         });
 
+        const data = await response.json();
+        
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to send message');
+          throw new Error(data.message || 'Failed to send message');
         }
 
         // Handle response
-        const data = await response.json();
         const botMessageElement = document.createElement('div');
         botMessageElement.className = 'lovable-message bot';
         botMessageElement.textContent = data.text;
@@ -307,7 +330,7 @@
         // Show error message in chat
         const errorElement = document.createElement('div');
         errorElement.className = 'lovable-message bot';
-        errorElement.textContent = error.message === 'No credits remaining' 
+        errorElement.textContent = error.message === 'No credits remaining'
           ? 'This website has run out of chat credits. Please contact the website owner.'
           : 'Failed to send message. Please try again.';
         elements.messagesContainer.appendChild(errorElement);
@@ -315,6 +338,7 @@
       } finally {
         elements.input.disabled = false;
         elements.sendButton.disabled = false;
+        elements.input.focus();
       }
     };
 
@@ -343,14 +367,16 @@
     }
 
     websiteId = scriptTag.getAttribute('data-website-id');
-    if (!websiteId) {
-      console.error('No website ID provided');
+    token = scriptTag.getAttribute('data-token');
+    
+    if (!websiteId || !token) {
+      console.error('Website ID and token are required');
       return;
     }
 
     try {
       // Fetch website configuration
-      const response = await fetch(`/api/websites/${websiteId}/config`);
+      const response = await fetch(`/api/websites/${websiteId}/config?token=${token}`);
       if (!response.ok) {
         throw new Error('Failed to fetch website configuration');
       }
@@ -366,14 +392,19 @@
     container.className = 'lovable-chat-widget';
     container.innerHTML = `
       <button class="lovable-chat-button">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
       </button>
       <div class="lovable-chat-window">
         <div class="lovable-chat-header">
           <h3>Chat Support</h3>
-          <button class="lovable-close-button">×</button>
+          <button class="lovable-close-button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
         <div class="lovable-chat-messages"></div>
         <div class="lovable-chat-input">
@@ -399,15 +430,6 @@
     // Initialize chat and apply styles
     updateStyles(currentConfig);
     initializeChat(container);
-
-    // Listen for configuration updates
-    window.addEventListener('message', (event) => {
-      if (event.data.type === 'lovable-chat-config-update') {
-        console.log('Received config update:', event.data.config);
-        updateConfig(event.data.config);
-        updateStyles(event.data.config);
-      }
-    }, false);
 
     console.log('Widget initialized successfully');
   };

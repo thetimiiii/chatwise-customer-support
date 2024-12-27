@@ -8,15 +8,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const websiteId = req.query.id as string;
+    const token = req.query.token as string;
 
-    if (!websiteId) {
-      return res.status(400).json({ message: 'Website ID is required' });
+    if (!websiteId || !token) {
+      return res.status(400).json({ message: 'Website ID and token are required' });
     }
 
-    // Get website configuration
+    // Get website configuration and verify token
     const { data: website, error } = await supabase
       .from('websites')
-      .select('config')
+      .select('config, embed_token')
       .eq('id', websiteId)
       .single();
 
@@ -27,6 +28,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!website) {
       return res.status(404).json({ message: 'Website not found' });
+    }
+
+    if (website.embed_token !== token) {
+      return res.status(401).json({ message: 'Invalid token' });
     }
 
     return res.status(200).json(website.config);
