@@ -6,7 +6,7 @@ import Cors from 'cors';
 const cors = Cors({
   methods: ['GET', 'OPTIONS'],
   origin: '*', // Allow all origins
-  credentials: true,
+  credentials: false, // Don't need credentials
 });
 
 // Helper method to wait for a middleware to execute before continuing
@@ -25,6 +25,11 @@ function runMiddleware(req: NextApiRequest, res: NextApiResponse, fn: Function) 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Run the middleware
   await runMiddleware(req, res, cors);
+
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();

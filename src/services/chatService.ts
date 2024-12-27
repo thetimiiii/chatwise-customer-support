@@ -1,7 +1,31 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const getChatResponse = async (message: string, websiteId: string) => {
+const DASHBOARD_URL = "https://www.simplesupportbot.com";
+
+export const getChatResponse = async (
+  message: string, 
+  websiteId: string,
+  token?: string // Optional token for embed mode
+) => {
   try {
+    // If token is provided, use the API route (embed mode)
+    if (token) {
+      const response = await fetch(`${DASHBOARD_URL}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, websiteId, token }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to get chat response');
+      }
+
+      const data = await response.json();
+      return data.text;
+    }
+
+    // Dashboard mode - use direct Supabase access
     console.log('Starting chat request:', { message, websiteId });
     
     // Get the website's user_id to update their credits

@@ -100,33 +100,12 @@ export const ChatWidget = ({
     setMessages((prev) => [...prev, { content: userMessage, isUser: true }]);
 
     try {
-      let response;
-      if (token) {
-        // Embedded mode - use API endpoint
-        const apiResponse = await fetch(`${DASHBOARD_URL}/api/chat`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Origin': window.location.origin,
-          },
-          credentials: 'include',
-          mode: 'cors',
-          body: JSON.stringify({ message: userMessage, websiteId, token }),
-        });
-        
-        if (!apiResponse.ok) throw new Error('Failed to send message');
-        const data = await apiResponse.json();
-        response = data.text;
-      } else {
-        // Dashboard mode - use direct service
-        response = await getChatResponse(userMessage, websiteId);
-      }
-
+      const response = await getChatResponse(userMessage, websiteId, token);
       setMessages((prev) => [...prev, { content: response, isUser: false }]);
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages((prev) => [...prev, { 
-        content: 'I apologize, but I am having trouble responding right now. Please try again in a moment.',
+        content: error instanceof Error ? error.message : 'I apologize, but I am having trouble responding right now. Please try again in a moment.',
         isUser: false 
       }]);
     } finally {

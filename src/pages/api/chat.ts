@@ -6,7 +6,7 @@ import Cors from 'cors';
 const cors = Cors({
   methods: ['POST', 'OPTIONS'],
   origin: '*', // Allow all origins
-  credentials: true,
+  credentials: false, // Don't need credentials
 });
 
 // Helper method to wait for a middleware to execute before continuing
@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Verify website exists and token is valid
     const { data: website, error: websiteError } = await supabase
       .from('websites')
-      .select('id, user_id, embed_token')
+      .select('id, user_id, embed_token, config')
       .eq('id', websiteId)
       .single();
 
@@ -78,13 +78,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const response = await fetch('https://api.cohere.ai/v1/chat', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer u1uJ7ifVjzGHnzYVzsu0HQJiaYGBstRUkXnnGwzs',
+        'Authorization': `Bearer ${process.env.COHERE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         message,
         model: 'command',
-        preamble: "You are a helpful customer support agent. Be concise and friendly in your responses.",
+        preamble: website.config?.preamble || "You are a helpful customer support agent. Be concise and friendly in your responses.",
       }),
     });
 
