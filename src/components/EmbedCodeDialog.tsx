@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Website } from "@/integrations/supabase/types/website";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://chatwise-customer-support.vercel.app";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://simplesupportbot.com";
 
 interface EmbedCodeDialogProps {
   website: Website;
@@ -30,7 +30,7 @@ export const EmbedCodeDialog = ({ website, open, onOpenChange }: EmbedCodeDialog
 
     // Load widget script
     var script = document.createElement('script');
-    script.src = '${APP_URL}/widget.js/';  // Note the trailing slash - important for Next.js route handling
+    script.src = '${APP_URL}/public/widget.js';
     script.async = true;
     document.head.appendChild(script);
 

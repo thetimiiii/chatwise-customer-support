@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
   async headers() {
     return [
       {
@@ -14,7 +15,15 @@ const nextConfig = {
         ],
       }
     ];
-  }
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/public/widget.js',
+        destination: '/widget.js',
+      },
+    ];
+  },
 };
 
-module.exports = nextConfig; 
+module.exports = nextConfig;
