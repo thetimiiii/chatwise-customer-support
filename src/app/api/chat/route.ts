@@ -2,29 +2,32 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/integrations/supabase/client';
 
 // Helper function to handle CORS
-function corsResponse(response: NextResponse) {
-  response.headers.set('Access-Control-Allow-Origin', '*');
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  return response;
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400',
+  };
 }
 
-// Handle OPTIONS requests for CORS
+// Handle preflight requests
 export async function OPTIONS() {
-  return corsResponse(new NextResponse(null, { status: 200 }));
+  return NextResponse.json({}, { headers: corsHeaders() });
 }
 
 export async function POST(request: Request) {
   try {
+    // Add CORS headers to all responses
+    const headers = corsHeaders();
+
     const { websiteId, message, token, config } = await request.json();
 
     // Validate request
     if (!websiteId || !message || !token) {
-      return corsResponse(
-        NextResponse.json(
-          { error: 'Missing required fields' },
-          { status: 400 }
-        )
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400, headers }
       );
     }
 
@@ -37,11 +40,9 @@ export async function POST(request: Request) {
       .single();
 
     if (websiteError || !website) {
-      return corsResponse(
-        NextResponse.json(
-          { error: 'Invalid token or website ID' },
-          { status: 401 }
-        )
+      return NextResponse.json(
+        { error: 'Invalid token or website ID' },
+        { status: 401, headers }
       );
     }
 
@@ -112,14 +113,12 @@ export async function POST(request: Request) {
       console.error('Error saving messages:', { saveUserMsgError, saveAiMsgError });
     }
 
-    return corsResponse(NextResponse.json({ message: aiResponse }));
+    return NextResponse.json({ message: aiResponse }, { headers });
   } catch (error) {
     console.error('Chat API error:', error);
-    return corsResponse(
-      NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
-      )
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500, headers: corsHeaders() }
     );
   }
 }

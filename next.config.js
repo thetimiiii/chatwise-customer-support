@@ -5,38 +5,41 @@ const nextConfig = {
   async headers() {
     return [
       {
-        // Allow embedding in iframes from any domain
-        source: '/embedded-chat',
+        source: '/api/:path*',
         headers: [
           {
-            key: 'Content-Security-Policy',
-            value: "frame-ancestors 'self' *"
+            key: 'Access-Control-Allow-Origin',
+            value: '*'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, OPTIONS'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization'
+          },
+          {
+            key: 'Access-Control-Max-Age',
+            value: '86400'
           }
-        ],
+        ]
       },
       {
         source: '/widget.js',
         headers: [
           {
             key: 'Content-Type',
-            value: 'application/javascript',
+            value: 'application/javascript'
           },
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
+            value: 'public, max-age=31536000, immutable'
+          }
+        ]
+      }
     ];
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/public/widget.js',
-        destination: '/widget.js',
-      },
-    ];
-  },
+  }
 };
 
 module.exports = nextConfig;
