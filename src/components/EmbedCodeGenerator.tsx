@@ -34,12 +34,12 @@ export const EmbedCodeGenerator = ({ websiteId }: { websiteId: string }) => {
       websiteId: '${websiteId}',
       token: '${website.embed_token}',
       config: ${JSON.stringify(website.config || {})},
-      host: '${window.location.origin}'
+      host: window.location.protocol + '//' + window.location.host
     };
 
     // Load widget script
     var script = document.createElement('script');
-    script.src = "${window.location.origin}/widget.js";
+    script.src = window.ChatwiseWidget.host + "/widget.js";
     script.async = true;
     document.head.appendChild(script);
 
@@ -55,7 +55,7 @@ export const EmbedCodeGenerator = ({ websiteId }: { websiteId: string }) => {
     };
 
     fetchEmbedToken();
-  }, [websiteId]);
+  }, [websiteId, toast]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(embedCode);
@@ -67,14 +67,10 @@ export const EmbedCodeGenerator = ({ websiteId }: { websiteId: string }) => {
 
   return (
     <div className="space-y-4">
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <pre className="text-sm overflow-x-auto whitespace-pre-wrap">
-          <code>{embedCode}</code>
-        </pre>
+      <div className="bg-muted p-4 rounded-lg">
+        <pre className="whitespace-pre-wrap text-sm">{embedCode}</pre>
       </div>
-      <Button onClick={copyToClipboard}>
-        Copy Embed Code
-      </Button>
+      <Button onClick={copyToClipboard}>Copy Embed Code</Button>
     </div>
   );
 };

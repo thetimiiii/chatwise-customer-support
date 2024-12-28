@@ -30,311 +30,238 @@
       bottom: 20px;
       right: 20px;
       z-index: 9999;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', sans-serif;
     }
 
     .chatwise-button {
-      width: 48px;
-      height: 48px;
+      width: 60px;
+      height: 60px;
       border-radius: 50%;
       background-color: ${primaryColor};
       color: white;
-      border: none;
-      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      transition: all 0.2s ease;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s;
     }
 
     .chatwise-button:hover {
       transform: scale(1.05);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
     }
 
-    .chatwise-window {
+    .chatwise-icon {
+      width: 30px;
+      height: 30px;
+    }
+
+    .chatwise-chat-container {
       position: fixed;
-      bottom: 80px;
+      bottom: 100px;
       right: 20px;
-      width: 350px;
-      height: 500px;
+      width: 380px;
+      height: 600px;
       background: white;
       border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
       display: none;
       flex-direction: column;
       overflow: hidden;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      transition: all 0.3s ease;
-      border: 1px solid #e2e8f0;
     }
 
-    .chatwise-window.open {
+    .chatwise-chat-container.open {
       display: flex;
     }
 
-    .chatwise-header {
+    .chatwise-chat-header {
       padding: 16px;
-      background: #ffffff;
-      border-bottom: 1px solid #e2e8f0;
+      background-color: ${primaryColor};
+      color: white;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
 
-    .chatwise-header h3 {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 600;
-      color: #1a1f2c;
-    }
-
-    .chatwise-close {
+    .chatwise-close-button {
       background: none;
       border: none;
-      color: #64748b;
+      color: white;
       cursor: pointer;
       padding: 4px;
-      line-height: 1;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
-      border-radius: 4px;
     }
 
-    .chatwise-close:hover {
-      background-color: #f1f5f9;
-    }
-
-    .chatwise-messages {
-      flex: 1;
-      overflow-y: auto;
+    .chatwise-chat-messages {
+      flex-grow: 1;
       padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      overflow-y: auto;
     }
 
     .chatwise-message {
-      max-width: 85%;
-      padding: 12px;
-      border-radius: 12px;
-      line-height: 1.5;
-      font-size: 14px;
-      animation: fadeIn 0.3s ease;
+      margin-bottom: 16px;
+      max-width: 80%;
     }
 
     .chatwise-message.user {
-      align-self: flex-end;
+      margin-left: auto;
+    }
+
+    .chatwise-message-content {
+      padding: 12px;
+      border-radius: 12px;
+      background-color: #f3f4f6;
+      display: inline-block;
+    }
+
+    .chatwise-message.user .chatwise-message-content {
       background-color: ${primaryColor};
       color: white;
-      border-bottom-right-radius: 4px;
     }
 
-    .chatwise-message.bot {
-      align-self: flex-start;
-      background-color: #f1f5f9;
-      color: #1a1f2c;
-      border-bottom-left-radius: 4px;
-    }
-
-    .chatwise-input {
+    .chatwise-input-container {
       padding: 16px;
-      border-top: 1px solid #e2e8f0;
+      border-top: 1px solid #e5e7eb;
       display: flex;
       gap: 8px;
     }
 
-    .chatwise-input input {
-      flex: 1;
+    .chatwise-input {
+      flex-grow: 1;
       padding: 8px 12px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid #e5e7eb;
       border-radius: 6px;
-      font-size: 14px;
       outline: none;
-      transition: all 0.2s ease;
     }
 
-    .chatwise-input input:focus {
-      border-color: ${primaryColor};
-      box-shadow: 0 0 0 1px ${primaryColor}33;
-    }
-
-    .chatwise-input button {
-      padding: 8px;
+    .chatwise-send-button {
+      padding: 8px 16px;
       background-color: ${primaryColor};
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
     }
 
-    .chatwise-input button:hover {
-      opacity: 0.9;
-    }
-
-    .chatwise-input button:disabled {
+    .chatwise-send-button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
     }
   `;
 
   const updateStyles = (config) => {
-    const styleTag = document.getElementById('chatwise-styles');
-    if (styleTag) {
-      styleTag.textContent = generateChatStyles(config.primaryColor);
-    } else {
-      const style = document.createElement('style');
-      style.id = 'chatwise-styles';
-      style.textContent = generateChatStyles(config.primaryColor);
-      document.head.appendChild(style);
+    const styleId = 'chatwise-styles';
+    let styleElement = document.getElementById(styleId);
+
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = styleId;
+      document.head.appendChild(styleElement);
     }
+
+    styleElement.textContent = generateChatStyles(config.primaryColor);
   };
 
-  // Initialize widget
-  const initializeWidget = async () => {
+  const initializeWidget = () => {
     // Create widget container
-    const container = document.createElement('div');
-    container.className = 'chatwise-widget';
+    const widgetContainer = document.createElement('div');
+    widgetContainer.className = 'chatwise-widget';
     
-    // Add widget HTML
-    container.innerHTML = `
-      <button class="chatwise-button">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
-        </svg>
-      </button>
-      
-      <div class="chatwise-window">
-        <div class="chatwise-header">
-          <h3>Chat Support</h3>
-          <button class="chatwise-close">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-        
-        <div class="chatwise-messages"></div>
-        
-        <div class="chatwise-input">
-          <input type="text" placeholder="Type your message...">
-          <button>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-          </button>
-        </div>
+    // Create chat button
+    const chatButton = document.createElement('div');
+    chatButton.className = 'chatwise-button';
+    chatButton.innerHTML = `
+      <svg class="chatwise-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 11.5C21 16.75 16.75 21 11.5 21C6.25 21 2 16.75 2 11.5C2 6.25 6.25 2 11.5 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M22 9V2H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    `;
+    
+    // Create chat container
+    const chatContainer = document.createElement('div');
+    chatContainer.className = 'chatwise-chat-container';
+    chatContainer.innerHTML = `
+      <div class="chatwise-chat-header">
+        <span>Chat Support</span>
+        <button class="chatwise-close-button">×</button>
+      </div>
+      <div class="chatwise-chat-messages"></div>
+      <div class="chatwise-input-container">
+        <input type="text" class="chatwise-input" placeholder="Type your message...">
+        <button class="chatwise-send-button">Send</button>
       </div>
     `;
-
-    // Add to page
-    document.body.appendChild(container);
-
-    // Initialize chat functionality
-    const elements = {
-      chatButton: container.querySelector('.chatwise-button'),
-      chatWindow: container.querySelector('.chatwise-window'),
-      closeButton: container.querySelector('.chatwise-close'),
-      messagesContainer: container.querySelector('.chatwise-messages'),
-      input: container.querySelector('input'),
-      sendButton: container.querySelector('.chatwise-input button')
-    };
-
-    // Event handlers
-    elements.chatButton.addEventListener('click', () => {
-      elements.chatWindow.classList.add('open');
-      console.log('Chat window opened');
+    
+    // Add elements to DOM
+    widgetContainer.appendChild(chatButton);
+    widgetContainer.appendChild(chatContainer);
+    document.body.appendChild(widgetContainer);
+    
+    // Add event listeners
+    chatButton.addEventListener('click', () => {
+      chatContainer.classList.add('open');
     });
     
-    elements.closeButton.addEventListener('click', () => {
-      elements.chatWindow.classList.remove('open');
-      console.log('Chat window closed');
+    const closeButton = chatContainer.querySelector('.chatwise-close-button');
+    closeButton.addEventListener('click', () => {
+      chatContainer.classList.remove('open');
     });
-
+    
+    const input = chatContainer.querySelector('.chatwise-input');
+    const sendButton = chatContainer.querySelector('.chatwise-send-button');
+    const messagesContainer = chatContainer.querySelector('.chatwise-chat-messages');
+    
+    const addMessage = (content, isUser = false) => {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `chatwise-message${isUser ? ' user' : ''}`;
+      messageDiv.innerHTML = `<div class="chatwise-message-content">${content}</div>`;
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    };
+    
     const sendMessage = async () => {
-      const message = elements.input.value.trim();
+      const message = input.value.trim();
       if (!message) return;
-
-      elements.input.disabled = true;
-      elements.sendButton.disabled = true;
-
+      
+      input.value = '';
+      sendButton.disabled = true;
+      
+      addMessage(message, true);
+      
       try {
-        // Create and append user message
-        const userMessageElement = document.createElement('div');
-        userMessageElement.className = 'chatwise-message user';
-        userMessageElement.textContent = message;
-        userMessageElement.style.backgroundColor = currentConfig.primaryColor;
-        elements.messagesContainer.appendChild(userMessageElement);
-        elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
-
-        elements.input.value = '';
-
-        // Send message to API with authentication
         const response = await fetch(`${host}/api/chat`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            message,
             websiteId,
+            message,
             token,
             config: currentConfig
-          }),
+          })
         });
-
-        if (!response.ok) throw new Error('Failed to send message');
-
-        const data = await response.json();
-        const botMessageElement = document.createElement('div');
-        botMessageElement.className = 'chatwise-message bot';
-        botMessageElement.textContent = data.text;
-        elements.messagesContainer.appendChild(botMessageElement);
-        elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
         
-        console.log('Message sent and response received');
+        const data = await response.json();
+        if (data.message) {
+          addMessage(data.message);
+        } else if (data.error) {
+          addMessage(`Error: ${data.error}`);
+        }
       } catch (error) {
         console.error('Error sending message:', error);
-        const errorMessageElement = document.createElement('div');
-        errorMessageElement.className = 'chatwise-message bot';
-        errorMessageElement.textContent = 'Sorry, there was an error sending your message. Please try again.';
-        elements.messagesContainer.appendChild(errorMessageElement);
-      } finally {
-        elements.input.disabled = false;
-        elements.sendButton.disabled = false;
-        elements.input.focus();
+        addMessage('Sorry, there was an error processing your message.');
       }
+      
+      sendButton.disabled = false;
     };
-
-    // Attach message sending handlers
-    elements.sendButton.addEventListener('click', sendMessage);
-    elements.input.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
+    
+    sendButton.addEventListener('click', sendMessage);
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
         sendMessage();
       }
     });
-    
-    // Apply initial styles
-    updateStyles(currentConfig);
-
-    return elements;
   };
 
   // Initialize the widget
