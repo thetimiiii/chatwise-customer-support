@@ -26,11 +26,11 @@ export const EmbedCodeGenerator = ({ websiteId }: { websiteId: string }) => {
         return;
       }
 
-      const code = `<!-- Lovable Chat Widget -->
+      const code = `<!-- Chatwise Support Widget -->
 <script>
   (function() {
     // Initialize widget configuration
-    window.LovableChat = {
+    window.ChatwiseWidget = {
       websiteId: '${websiteId}',
       token: '${website.embed_token}',
       config: ${JSON.stringify(website.config || {})},
