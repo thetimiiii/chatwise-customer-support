@@ -17,7 +17,7 @@ const nextConfig = {
           },
           {
             key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization'
+            value: 'Content-Type, Authorization, Origin'
           },
           {
             key: 'Access-Control-Max-Age',
@@ -35,6 +35,10 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable'
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*'
           }
         ]
       }

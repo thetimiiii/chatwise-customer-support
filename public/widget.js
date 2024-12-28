@@ -2,7 +2,10 @@
   console.log('Chatwise Widget initializing...');
   
   // Get configuration from window object
-  const { websiteId, token, config, host } = window.ChatwiseWidget || {};
+  const config = window.ChatwiseWidget || {};
+  const host = config.host || 'https://simplesupportbot.com';
+  const websiteId = config.websiteId;
+  const token = config.token;
   
   if (!websiteId || !token) {
     console.error('Chatwise: Missing required configuration');
@@ -13,7 +16,7 @@
   let currentConfig = {
     primaryColor: '#2563eb',
     preamble: "You are a helpful customer support agent. Be concise and friendly in your responses.",
-    ...config
+    ...config.config
   };
 
   const updateConfig = (newConfig) => {
@@ -171,11 +174,13 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Origin': window.location.origin,
         },
+        credentials: 'omit',
         body: JSON.stringify({
           websiteId,
           token,
-          message: message,
+          message,
           config: currentConfig
         }),
       });
@@ -193,7 +198,8 @@
   }
 
   // Handle minimize/maximize
-  minimizeButton.addEventListener('click', () => {
+  minimizeButton.addEventListener('click', (e) => {
+    e.stopPropagation();
     isMinimized = !isMinimized;
     widget.classList.toggle('minimized');
     minimizeButton.textContent = isMinimized ? '+' : '−';

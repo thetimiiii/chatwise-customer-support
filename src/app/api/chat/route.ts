@@ -6,14 +6,17 @@ function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Origin',
     'Access-Control-Max-Age': '86400',
   };
 }
 
 // Handle preflight requests
 export async function OPTIONS() {
-  return NextResponse.json({}, { headers: corsHeaders() });
+  return new NextResponse(null, { 
+    status: 204,
+    headers: corsHeaders()
+  });
 }
 
 export async function POST(request: Request) {
