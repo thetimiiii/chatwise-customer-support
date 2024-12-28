@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget Demo</title>
+</head>
+<body>
+    <!-- Example of how to embed the chat widget -->
+    <div id="chat-widget-container"></div>
+
+    <script>
+        // Function to load the chat widget
+        function loadChatWidget(websiteId, token) {
+            // Create the iframe
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.bottom = '20px';
+            iframe.style.right = '20px';
+            iframe.style.width = '350px';
+            iframe.style.height = '500px';
+            iframe.style.border = 'none';
+            iframe.style.overflow = 'hidden';
+            iframe.style.borderRadius = '10px';
+            iframe.style.boxShadow = '0 4px 6px -1px rgb(0 0 0 / 0.1)';
+            
+            // Set the source URL with authentication parameters
+            const widgetUrl = new URL('https://www.simplesupportbot.com/chat-widget');
+            widgetUrl.searchParams.set('websiteId', websiteId);
+            widgetUrl.searchParams.set('token', token);
+            iframe.src = widgetUrl.toString();
+
+            // Add message listener for iframe communication
+            window.addEventListener('message', (event) => {
+                // Verify origin for security
+                if (event.origin !== 'https://www.simplesupportbot.com') return;
+                
+                // Handle widget events
+                switch(event.data.type) {
+                    case 'widget:ready':
+                        console.log('Widget loaded successfully');
+                        break;
+                    case 'widget:close':
+                        iframe.style.display = 'none';
+                        break;
+                    case 'widget:open':
+                        iframe.style.display = 'block';
+                        break;
+                }
+            });
+
+            // Append iframe to container
+            document.getElementById('chat-widget-container').appendChild(iframe);
+        }
+
+        // Example usage
+        // Replace these with actual values from your dashboard
+        const websiteId = 'YOUR_WEBSITE_ID';
+        const token = 'YOUR_JWT_TOKEN';
+        
+        // Load the widget when the page is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            loadChatWidget(websiteId, token);
+        });
+    </script>
+
+    <!-- Example of how to trigger the widget programmatically -->
+    <button onclick="window.postMessage({ type: 'widget:open' }, '*')">
+        Open Chat
+    </button>
+</body>
+</html>

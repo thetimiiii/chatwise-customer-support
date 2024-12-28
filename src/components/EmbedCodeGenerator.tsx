@@ -9,9 +9,10 @@ export const EmbedCodeGenerator = ({ websiteId }: { websiteId: string }) => {
   
   useEffect(() => {
     const fetchEmbedToken = async () => {
+      // Fetch both the embed token and website configuration
       const { data: website, error } = await supabase
         .from('websites')
-        .select('embed_token')
+        .select('embed_token, config')
         .eq('id', websiteId)
         .single();
       
@@ -26,15 +27,27 @@ export const EmbedCodeGenerator = ({ websiteId }: { websiteId: string }) => {
       }
 
       const code = `<!-- Lovable Chat Widget -->
-<div id="lovable-chat-container"></div>
 <script>
   (function() {
+    // Initialize widget configuration
+    window.LovableChat = {
+      websiteId: '${websiteId}',
+      token: '${website.embed_token}',
+      config: ${JSON.stringify(website.config || {})},
+      host: '${window.location.origin}'
+    };
+
+    // Load widget script
     var script = document.createElement('script');
     script.src = "${window.location.origin}/widget.js";
-    script.setAttribute('data-website-id', '${websiteId}');
-    script.setAttribute('data-token', '${website.embed_token}');
     script.async = true;
     document.head.appendChild(script);
+
+    // Load widget styles
+    var link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
   })();
 </script>`;
       

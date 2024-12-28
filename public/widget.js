@@ -1,13 +1,20 @@
 (() => {
   console.log('Lovable Chat Widget initializing...');
   
-  // Config management
+  // Get configuration from window object
+  const { websiteId, token, config, host } = window.LovableChat || {};
+  
+  if (!websiteId || !token) {
+    console.error('Lovable Chat: Missing required configuration');
+    return;
+  }
+
+  // Initialize configuration
   let currentConfig = {
     primaryColor: '#2563eb',
-    preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
+    preamble: "You are a helpful customer support agent. Be concise and friendly in your responses.",
+    ...config
   };
-  let websiteId = null;
-  let token = null;
 
   const updateConfig = (newConfig) => {
     console.log('Updating widget config:', newConfig);
@@ -225,7 +232,7 @@
   };
 
   // Chat functionality
-  const initializeChat = (container) => {
+  const initializeChat = async (container) => {
     console.log('Initializing chat functionality');
     
     const elements = {
@@ -240,7 +247,6 @@
     // Event handlers
     elements.chatButton.addEventListener('click', () => {
       elements.chatWindow.classList.add('open');
-      elements.input.focus();
       console.log('Chat window opened');
     });
     
@@ -251,7 +257,7 @@
 
     const sendMessage = async () => {
       const message = elements.input.value.trim();
-      if (!message || !websiteId || !token) return;
+      if (!message) return;
 
       elements.input.disabled = true;
       elements.sendButton.disabled = true;
@@ -267,26 +273,23 @@
 
         elements.input.value = '';
 
-        // Send message to our backend service
-        const response = await fetch('/api/chat', {
+        // Send message to API with authentication
+        const response = await fetch(`${host}/api/chat`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
           },
           body: JSON.stringify({
             message,
             websiteId,
+            token,
+            config: currentConfig
           }),
         });
 
-        const data = await response.json();
-        
-        if (!response.ok) {
-          throw new Error(data.message || 'Failed to send message');
-        }
+        if (!response.ok) throw new Error('Failed to send message');
 
-        // Handle response
+        const data = await response.json();
         const botMessageElement = document.createElement('div');
         botMessageElement.className = 'lovable-message bot';
         botMessageElement.textContent = data.text;
@@ -296,15 +299,10 @@
         console.log('Message sent and response received');
       } catch (error) {
         console.error('Error sending message:', error);
-        
-        // Show error message in chat
-        const errorElement = document.createElement('div');
-        errorElement.className = 'lovable-message bot';
-        errorElement.textContent = error.message === 'No credits remaining'
-          ? 'This website has run out of chat credits. Please contact the website owner.'
-          : 'Failed to send message. Please try again.';
-        elements.messagesContainer.appendChild(errorElement);
-        elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
+        const errorMessageElement = document.createElement('div');
+        errorMessageElement.className = 'lovable-message bot';
+        errorMessageElement.textContent = 'Sorry, there was an error sending your message. Please try again.';
+        elements.messagesContainer.appendChild(errorMessageElement);
       } finally {
         elements.input.disabled = false;
         elements.sendButton.disabled = false;
@@ -312,6 +310,7 @@
       }
     };
 
+    // Attach message sending handlers
     elements.sendButton.addEventListener('click', sendMessage);
     elements.input.addEventListener('keypress', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -320,63 +319,36 @@
       }
     });
 
-    console.log('Chat functionality initialized');
+    return elements;
   };
 
   // Initialize widget
   const initializeWidget = async () => {
-    console.log('Initializing widget...');
-    
-    // Extract website ID from script tag
-    const scriptTag = document.currentScript || 
-      document.querySelector('script[src*="widget.js"]');
-    
-    if (!scriptTag) {
-      console.error('Could not find widget script tag');
-      return;
-    }
-
-    websiteId = scriptTag.getAttribute('data-website-id');
-    token = scriptTag.getAttribute('data-token');
-    
-    if (!websiteId || !token) {
-      console.error('Website ID and token are required');
-      return;
-    }
-
-    try {
-      // Fetch website configuration
-      const response = await fetch(`/api/websites/${websiteId}/config?token=${token}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch website configuration');
-      }
-      const config = await response.json();
-      updateConfig(config);
-    } catch (error) {
-      console.error('Error fetching website config:', error);
-      // Use default config if fetch fails
-    }
-
-    // Create widget HTML
+    // Create widget container
     const container = document.createElement('div');
     container.className = 'lovable-chat-widget';
+    
+    // Add widget HTML
     container.innerHTML = `
       <button class="lovable-chat-button">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
         </svg>
       </button>
+      
       <div class="lovable-chat-window">
         <div class="lovable-chat-header">
           <h3>Chat Support</h3>
           <button class="lovable-close-button">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>
           </button>
         </div>
+        
         <div class="lovable-chat-messages"></div>
+        
         <div class="lovable-chat-input">
           <input type="text" placeholder="Type your message...">
           <button>
@@ -389,18 +361,16 @@
       </div>
     `;
 
+    // Add to page
     document.body.appendChild(container);
 
-    // Load Inter font
-    const fontLink = document.createElement('link');
-    fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
-    fontLink.rel = 'stylesheet';
-    document.head.appendChild(fontLink);
-
-    // Initialize chat and apply styles
+    // Initialize chat functionality
+    const elements = await initializeChat(container);
+    
+    // Apply initial styles
     updateStyles(currentConfig);
-    initializeChat(container);
-    console.log('Widget initialized successfully');
+
+    return elements;
   };
 
   // Initialize the widget
