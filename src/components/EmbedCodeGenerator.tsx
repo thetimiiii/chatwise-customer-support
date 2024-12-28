@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+// Your application's base URL (replace with your actual URL in production)
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://chatwise-customer-support.vercel.app';
+
 export const EmbedCodeGenerator = ({ websiteId }: { websiteId: string }) => {
   const [embedCode, setEmbedCode] = useState("");
   const { toast } = useToast();
@@ -34,12 +37,12 @@ export const EmbedCodeGenerator = ({ websiteId }: { websiteId: string }) => {
       websiteId: '${websiteId}',
       token: '${website.embed_token}',
       config: ${JSON.stringify(website.config || {})},
-      host: window.location.protocol + '//' + window.location.host
+      host: '${APP_URL}'
     };
 
     // Load widget script
     var script = document.createElement('script');
-    script.src = window.ChatwiseWidget.host + "/widget.js";
+    script.src = '${APP_URL}/widget.js';
     script.async = true;
     document.head.appendChild(script);
 

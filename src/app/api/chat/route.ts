@@ -1,15 +1,30 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/integrations/supabase/client';
 
+// Helper function to handle CORS
+function corsResponse(response: NextResponse) {
+  response.headers.set('Access-Control-Allow-Origin', '*');
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  return response;
+}
+
+// Handle OPTIONS requests for CORS
+export async function OPTIONS() {
+  return corsResponse(new NextResponse(null, { status: 200 }));
+}
+
 export async function POST(request: Request) {
   try {
     const { websiteId, message, token, config } = await request.json();
 
     // Validate request
     if (!websiteId || !message || !token) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
+      return corsResponse(
+        NextResponse.json(
+          { error: 'Missing required fields' },
+          { status: 400 }
+        )
       );
     }
 
@@ -22,9 +37,11 @@ export async function POST(request: Request) {
       .single();
 
     if (websiteError || !website) {
-      return NextResponse.json(
-        { error: 'Invalid token or website ID' },
-        { status: 401 }
+      return corsResponse(
+        NextResponse.json(
+          { error: 'Invalid token or website ID' },
+          { status: 401 }
+        )
       );
     }
 
@@ -95,12 +112,14 @@ export async function POST(request: Request) {
       console.error('Error saving messages:', { saveUserMsgError, saveAiMsgError });
     }
 
-    return NextResponse.json({ message: aiResponse });
+    return corsResponse(NextResponse.json({ message: aiResponse }));
   } catch (error) {
     console.error('Chat API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    return corsResponse(
+      NextResponse.json(
+        { error: 'Internal server error' },
+        { status: 500 }
+      )
     );
   }
 }
