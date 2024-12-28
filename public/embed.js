@@ -1,7 +1,7 @@
 (() => {
   const WIDGET_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/embedded-chat'
-    : 'https://www.simplesupportbot.com/embedded-chat';
+    : `${process.env.NEXT_PUBLIC_APP_URL}/embedded-chat`;
 
   // Find our script tag
   const scriptTag = document.currentScript || 
@@ -23,7 +23,13 @@
 
   // Create and append the iframe
   const iframe = document.createElement('iframe');
-  iframe.src = `${WIDGET_URL}?websiteId=${encodeURIComponent(websiteId)}&token=${encodeURIComponent(token)}`;
+  const url = new URL(WIDGET_URL);
+  url.searchParams.set('websiteId', websiteId);
+  url.searchParams.set('token', token);
+  iframe.src = url.toString();
+  
+  console.log('Loading widget from:', iframe.src); // Debug log
+
   iframe.style.position = 'fixed';
   iframe.style.bottom = '20px';
   iframe.style.right = '20px';
@@ -39,8 +45,8 @@
   iframe.style.backdropFilter = 'none';
   iframe.allow = 'clipboard-write';
   
-  iframe.onerror = () => {
-    console.error('Failed to load chat widget');
+  iframe.onerror = (error) => {
+    console.error('Failed to load chat widget:', error);
     iframe.style.display = 'none';
   };
 
@@ -48,6 +54,7 @@
   iframe.style.transition = 'opacity 0.3s ease-in-out';
   
   iframe.onload = () => {
+    console.log('Widget loaded successfully'); // Debug log
     iframe.style.opacity = '1';
   };
 
@@ -55,7 +62,9 @@
 
   // Add message listener for iframe communication
   window.addEventListener('message', (event) => {
-    if (event.origin !== new URL(WIDGET_URL).origin) return;
+    // Verify origin
+    const iframeOrigin = new URL(WIDGET_URL).origin;
+    if (event.origin !== iframeOrigin) return;
     
     const { type, data } = event.data;
     switch (type) {
