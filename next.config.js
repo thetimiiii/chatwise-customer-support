@@ -13,7 +13,20 @@ const nextConfig = {
             value: "frame-ancestors 'self' *"
           }
         ],
-      }
+      },
+      {
+        source: '/widget.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
     ];
   },
   async rewrites() {

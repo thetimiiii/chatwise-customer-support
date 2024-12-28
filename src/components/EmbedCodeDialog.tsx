@@ -30,7 +30,7 @@ export const EmbedCodeDialog = ({ website, open, onOpenChange }: EmbedCodeDialog
 
     // Load widget script
     var script = document.createElement('script');
-    script.src = '${APP_URL}/public/widget.js';
+    script.src = '${APP_URL}/widget.js';
     script.async = true;
     document.head.appendChild(script);
 
