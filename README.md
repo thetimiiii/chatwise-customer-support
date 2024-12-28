@@ -4,6 +4,9 @@
 
 **URL**: https://lovable.dev/projects/4a2c6f52-2ba4-4219-9681-107bc7a5e062
 
+## About This Project
+Chatwise Customer Support is a modern, embeddable chat widget that helps businesses provide real-time customer support on their websites. It features a clean interface and seamless integration capabilities.
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
