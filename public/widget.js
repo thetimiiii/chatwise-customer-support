@@ -1,11 +1,18 @@
-// Add global error handler
-window.onerror = function(msg, url, lineNo, columnNo, error) {
-    console.log('Error: ' + msg + '\nURL: ' + url + '\nLine: ' + lineNo + '\nColumn: ' + columnNo + '\nError object: ' + JSON.stringify(error));
-    return false;
-};
+// Add global error handler that filters out ResizeObserver errors
+window.addEventListener('error', function(e) {
+    if (e.message.includes('ResizeObserver')) {
+        e.stopImmediatePropagation();
+        return false;
+    }
+});
 
 class ChatWidget {
     constructor(props) {
+        if (!props || !props.websiteId) {
+            console.error('ChatWidget initialization failed: Missing required websiteId');
+            return;
+        }
+
         if (CONFIG.DEBUG) {
             console.log('Initializing ChatWidget with props:', props);
         }
@@ -18,6 +25,13 @@ class ChatWidget {
             primaryColor: props.primaryColor || '#2563eb',
             preamble: props.preamble || 'How can I help you today?'
         };
+
+        // Prevent multiple instances
+        if (window.chatWidgetInstance) {
+            console.warn('ChatWidget instance already exists');
+            return window.chatWidgetInstance;
+        }
+        window.chatWidgetInstance = this;
 
         this.supabaseClient = new SupabaseClient();
         this.initialize();
@@ -50,6 +64,12 @@ class ChatWidget {
     }
 
     render() {
+        // Remove any existing container
+        const existingContainer = document.getElementById('chat-widget-container');
+        if (existingContainer) {
+            existingContainer.remove();
+        }
+
         const container = document.createElement('div');
         container.id = 'chat-widget-container';
         document.body.appendChild(container);
@@ -94,7 +114,9 @@ class ChatWidget {
         `;
 
         // Add initial message
-        this.messages = [{ content: this.config.preamble, isUser: false }];
+        if (!this.messages.length) {
+            this.messages = [{ content: this.config.preamble, isUser: false }];
+        }
         this.renderMessages();
 
         if (CONFIG.DEBUG) {
@@ -219,22 +241,49 @@ class ChatWidget {
 }
 
 // Initialize widget when script is loaded
-const script = document.currentScript;
-if (script) {
+function initializeChatWidget() {
+    const script = document.currentScript || document.querySelector('script[data-website-id]');
+    if (!script) {
+        console.error('Could not find chat widget script element');
+        return;
+    }
+
     const websiteId = script.getAttribute('data-website-id');
+    if (!websiteId) {
+        console.error('Missing required websiteId attribute');
+        return;
+    }
+
     const token = script.getAttribute('data-token');
     const primaryColor = script.getAttribute('data-primary-color');
 
-    if (websiteId) {
-        if (CONFIG.DEBUG) {
-            console.log('Initializing widget with:', { websiteId, token, primaryColor });
-        }
+    if (CONFIG.DEBUG) {
+        console.log('Initializing widget with:', { websiteId, token, primaryColor });
+    }
+
+    // Add CSS if not already added
+    if (!document.querySelector('link[href*="/css/styles.css"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = '/css/styles.css';
+        document.head.appendChild(link);
+    }
+
+    // Initialize widget
+    try {
         new ChatWidget({
             websiteId,
             token,
             primaryColor
         });
-    } else {
-        console.error('Missing required websiteId attribute');
+    } catch (error) {
+        console.error('Failed to initialize chat widget:', error);
     }
+}
+
+// Handle different loading scenarios
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeChatWidget);
+} else {
+    initializeChatWidget();
 }

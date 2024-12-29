@@ -1,82 +1,84 @@
-(() => {
-  const WIDGET_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000/embedded-chat'
-    : `${process.env.NEXT_PUBLIC_APP_URL}/embedded-chat`;
-
-  // Find our script tag
-  const scriptTag = document.currentScript || 
-    document.querySelector('script[src*="embed.js"]');
-  
-  if (!scriptTag) {
-    console.error('Could not find widget script tag');
-    return;
-  }
-
-  // Get required attributes
-  const websiteId = scriptTag.getAttribute('data-website-id');
-  const token = scriptTag.getAttribute('data-token');
-  
-  if (!websiteId || !token) {
-    console.error('Website ID and token are required');
-    return;
-  }
-
-  // Create and append the iframe
-  const iframe = document.createElement('iframe');
-  const url = new URL(WIDGET_URL);
-  url.searchParams.set('websiteId', websiteId);
-  url.searchParams.set('token', token);
-  iframe.src = url.toString();
-  
-  console.log('Loading widget from:', iframe.src); // Debug log
-
-  iframe.style.position = 'fixed';
-  iframe.style.bottom = '20px';
-  iframe.style.right = '20px';
-  iframe.style.width = '350px';
-  iframe.style.height = '500px';
-  iframe.style.border = 'none';
-  iframe.style.borderRadius = '8px';
-  iframe.style.boxShadow = '0px 4px 12px rgba(0, 0, 0, 0.15)';
-  iframe.style.zIndex = '9999';
-  iframe.style.background = 'transparent';
-  iframe.style.backgroundColor = 'transparent';
-  iframe.allowTransparency = 'true';
-  iframe.style.backdropFilter = 'none';
-  iframe.allow = 'clipboard-write';
-  
-  iframe.onerror = (error) => {
-    console.error('Failed to load chat widget:', error);
-    iframe.style.display = 'none';
-  };
-
-  iframe.style.opacity = '0';
-  iframe.style.transition = 'opacity 0.3s ease-in-out';
-  
-  iframe.onload = () => {
-    console.log('Widget loaded successfully'); // Debug log
-    iframe.style.opacity = '1';
-  };
-
-  document.body.appendChild(iframe);
-
-  // Add message listener for iframe communication
-  window.addEventListener('message', (event) => {
-    // Verify origin
-    const iframeOrigin = new URL(WIDGET_URL).origin;
-    if (event.origin !== iframeOrigin) return;
-    
-    const { type, data } = event.data;
-    switch (type) {
-      case 'resize':
-        iframe.style.height = `${data.height}px`;
-        break;
-      case 'close':
-        iframe.style.display = 'none';
-        break;
-      case 'error':
-        console.error('Chat widget error:', data);
-        break;
+(function() {
+    // Prevent multiple initializations
+    if (window.chatWiseInitialized) {
+        console.warn('ChatWise widget already initialized');
+        return;
     }
-  });
-})(); 
+    window.chatWiseInitialized = true;
+
+    function loadScript(src, attributes = {}) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.async = true;
+            
+            // Add any custom attributes
+            Object.entries(attributes).forEach(([key, value]) => {
+                script.setAttribute(key, value);
+            });
+
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    function loadStyle(href) {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector(`link[href="${href}"]`)) {
+                resolve();
+                return;
+            }
+
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = href;
+            link.onload = resolve;
+            link.onerror = reject;
+            document.head.appendChild(link);
+        });
+    }
+
+    async function initializeWidget(config) {
+        try {
+            // Load styles first
+            await loadStyle(config.baseUrl + '/css/styles.css');
+            
+            // Then load the widget script
+            await loadScript(config.baseUrl + '/widget.js', {
+                'data-website-id': config.websiteId,
+                'data-token': config.token,
+                'data-primary-color': config.primaryColor
+            });
+        } catch (error) {
+            console.error('Failed to initialize ChatWise widget:', error);
+        }
+    }
+
+    // Get the current script tag
+    const currentScript = document.currentScript;
+    if (!currentScript) {
+        console.error('Could not find ChatWise embed script');
+        return;
+    }
+
+    // Get configuration from script attributes
+    const config = {
+        baseUrl: currentScript.getAttribute('data-base-url') || '',
+        websiteId: currentScript.getAttribute('data-website-id'),
+        token: currentScript.getAttribute('data-token'),
+        primaryColor: currentScript.getAttribute('data-primary-color')
+    };
+
+    if (!config.websiteId) {
+        console.error('ChatWise: Missing required websiteId');
+        return;
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => initializeWidget(config));
+    } else {
+        initializeWidget(config);
+    }
+})();
