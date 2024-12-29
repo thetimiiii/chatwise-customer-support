@@ -24,16 +24,26 @@ function generateEmbedCode(websiteId: string, token: string, config: WebsiteConf
   return `<!-- Chatwise Support Widget -->
 <div id="chatwise-container"></div>
 <script>
-  // Set up ChatwiseConfig immediately and globally
-  window.ChatwiseConfig = {
-    websiteId: '${websiteId}',
-    token: '${token}',
-    primaryColor: '${config.primaryColor}',
-    preamble: '${config.preamble}',
-    host: 'https://simplesupportbot.com'  // Always use your domain for API
-  };
+  console.log('[Debug] Starting to set ChatwiseConfig...');
+  try {
+    // Set up ChatwiseConfig immediately and globally
+    window.ChatwiseConfig = {
+      websiteId: '${websiteId}',
+      token: '${token}',
+      primaryColor: '${config.primaryColor}',
+      preamble: '${config.preamble}',
+      host: 'https://simplesupportbot.com'
+    };
+    console.log('[Debug] ChatwiseConfig set successfully:', window.ChatwiseConfig);
+  } catch(error) {
+    console.error('[Debug] Error setting ChatwiseConfig:', error);
+  }
 </script>
-<script src="https://simplesupportbot.com/widget.js"></script>
+<script 
+  src="https://simplesupportbot.com/widget.js" 
+  onload="console.log('[Debug] widget.js loaded')" 
+  onerror="console.error('[Debug] Failed to load widget.js')"
+></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   #chatwise-container {
