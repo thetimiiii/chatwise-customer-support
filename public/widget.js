@@ -1,30 +1,9 @@
 (() => {
-  console.log('Chatwise Widget initializing...');
-  
   // Get configuration from window object
   const config = window.ChatwiseWidget || {};
   const host = config.host || 'https://simplesupportbot.com';
   const websiteId = config.websiteId;
   const token = config.token;
-  
-  if (!websiteId || !token) {
-    console.error('Chatwise: Missing required configuration');
-    return;
-  }
-
-  // Initialize configuration
-  let currentConfig = {
-    primaryColor: '#2563eb',
-    preamble: "You are a helpful customer support agent. Be concise and friendly in your responses.",
-    ...config.config
-  };
-
-  const updateConfig = (newConfig) => {
-    console.log('Updating widget config:', newConfig);
-    Object.assign(currentConfig, newConfig);
-    updateStyles(currentConfig);
-    return currentConfig;
-  };
 
   // Create widget styles
   const style = document.createElement('style');
@@ -33,28 +12,47 @@
       position: fixed;
       bottom: 20px;
       right: 20px;
-      width: 360px;
-      height: 600px;
+      z-index: 999999;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    .chatwise-widget-button {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--primary-color, #2563eb);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: transform 0.2s;
+    }
+    .chatwise-widget-button:hover {
+      transform: scale(1.05);
+    }
+    .chatwise-widget-button svg {
+      width: 24px;
+      height: 24px;
+      color: white;
+    }
+    .chatwise-widget-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 350px;
+      height: 500px;
       background: white;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       display: flex;
       flex-direction: column;
-      font-family: 'Inter', sans-serif;
-      z-index: 999999;
       overflow: hidden;
-      transition: all 0.3s ease;
-    }
-    .chatwise-widget.minimized {
-      height: 60px;
-      width: 60px;
-      border-radius: 30px;
-      cursor: pointer;
+      border: 1px solid #e5e7eb;
     }
     .chatwise-widget-header {
       padding: 16px;
-      background: var(--primary-color, #2563eb);
-      color: white;
+      border-bottom: 1px solid #e5e7eb;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -62,17 +60,21 @@
     .chatwise-widget-title {
       font-weight: 600;
       font-size: 16px;
+      color: #1f2937;
       margin: 0;
     }
-    .chatwise-widget-minimize {
+    .chatwise-widget-close {
       background: none;
       border: none;
-      color: white;
+      padding: 8px;
       cursor: pointer;
-      padding: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #6b7280;
+    }
+    .chatwise-widget-close:hover {
+      color: #1f2937;
     }
     .chatwise-widget-messages {
       flex: 1;
@@ -80,24 +82,26 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
     }
     .chatwise-message {
-      max-width: 80%;
+      max-width: 85%;
       padding: 12px;
-      border-radius: 12px;
+      border-radius: 8px;
       font-size: 14px;
-      line-height: 1.4;
+      line-height: 1.5;
     }
     .chatwise-message.user {
+      margin-left: auto;
       background: var(--primary-color, #2563eb);
       color: white;
-      align-self: flex-end;
+      border-bottom-right-radius: 4px;
     }
     .chatwise-message.bot {
+      margin-right: auto;
       background: #f3f4f6;
       color: #1f2937;
-      align-self: flex-start;
+      border-bottom-left-radius: 4px;
     }
     .chatwise-widget-input {
       padding: 16px;
@@ -115,20 +119,28 @@
     }
     .chatwise-widget-input input:focus {
       border-color: var(--primary-color, #2563eb);
+      box-shadow: 0 0 0 1px var(--primary-color, #2563eb);
     }
     .chatwise-widget-input button {
       background: var(--primary-color, #2563eb);
       color: white;
       border: none;
       border-radius: 6px;
-      padding: 8px 16px;
-      font-size: 14px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       cursor: pointer;
       transition: opacity 0.2s;
     }
     .chatwise-widget-input button:disabled {
       opacity: 0.7;
       cursor: not-allowed;
+    }
+    .chatwise-widget-input button svg {
+      width: 16px;
+      height: 16px;
     }
   `;
   document.head.appendChild(style);
@@ -137,26 +149,47 @@
   const widget = document.createElement('div');
   widget.className = 'chatwise-widget';
   widget.innerHTML = `
+    <button class="chatwise-widget-button">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+      </svg>
+    </button>
+  `;
+  document.body.appendChild(widget);
+
+  // Create chat container
+  const container = document.createElement('div');
+  container.className = 'chatwise-widget-container';
+  container.style.display = 'none';
+  container.innerHTML = `
     <div class="chatwise-widget-header">
       <h3 class="chatwise-widget-title">Chat Support</h3>
-      <button class="chatwise-widget-minimize">−</button>
+      <button class="chatwise-widget-close">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     </div>
     <div class="chatwise-widget-messages"></div>
     <div class="chatwise-widget-input">
       <input type="text" placeholder="Type your message..." />
-      <button>Send</button>
+      <button disabled>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </button>
     </div>
   `;
-  document.body.appendChild(widget);
+  document.body.appendChild(container);
 
   // Get widget elements
-  const minimizeButton = widget.querySelector('.chatwise-widget-minimize');
-  const messagesContainer = widget.querySelector('.chatwise-widget-messages');
-  const input = widget.querySelector('input');
-  const sendButton = widget.querySelector('button');
-
-  // Initialize widget state
-  let isMinimized = false;
+  const toggleButton = widget.querySelector('.chatwise-widget-button');
+  const closeButton = container.querySelector('.chatwise-widget-close');
+  const messagesContainer = container.querySelector('.chatwise-widget-messages');
+  const input = container.querySelector('input');
+  const sendButton = container.querySelector('button:last-child');
 
   // Add message to chat
   function addMessage(message, isUser = false) {
@@ -176,12 +209,13 @@
           'Content-Type': 'application/json',
           'Origin': window.location.origin,
         },
+        mode: 'cors',
         credentials: 'omit',
         body: JSON.stringify({
           websiteId,
           token,
           message,
-          config: currentConfig
+          config: config.config || {}
         }),
       });
 
@@ -193,59 +227,60 @@
       return data.message;
     } catch (error) {
       console.error('Error sending message:', error);
-      return 'Sorry, I encountered an error. Please try again later.';
+      throw new Error('I apologize, but I am having trouble responding right now. Please try again in a moment.');
     }
   }
-
-  // Handle minimize/maximize
-  minimizeButton.addEventListener('click', (e) => {
-    e.stopPropagation();
-    isMinimized = !isMinimized;
-    widget.classList.toggle('minimized');
-    minimizeButton.textContent = isMinimized ? '+' : '−';
-  });
 
   // Handle send message
   async function handleSend() {
     const message = input.value.trim();
     if (!message) return;
 
-    // Disable input while sending
     input.disabled = true;
     sendButton.disabled = true;
-
-    // Add user message
-    addMessage(message, true);
     input.value = '';
 
-    // Get bot response
-    const response = await sendMessage(message);
-    addMessage(response);
-
-    // Re-enable input
-    input.disabled = false;
-    sendButton.disabled = false;
-    input.focus();
+    try {
+      addMessage(message, true);
+      const response = await sendMessage(message);
+      addMessage(response);
+    } catch (error) {
+      addMessage(error.message);
+    } finally {
+      input.disabled = false;
+      sendButton.disabled = false;
+      input.focus();
+    }
   }
 
   // Event listeners
-  sendButton.addEventListener('click', handleSend);
-  input.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') handleSend();
+  toggleButton.addEventListener('click', () => {
+    container.style.display = 'flex';
+    toggleButton.parentElement.style.display = 'none';
+    input.focus();
   });
 
-  // Handle click when minimized
-  widget.addEventListener('click', () => {
-    if (isMinimized) {
-      isMinimized = false;
-      widget.classList.remove('minimized');
-      minimizeButton.textContent = '−';
+  closeButton.addEventListener('click', () => {
+    container.style.display = 'none';
+    toggleButton.parentElement.style.display = 'block';
+  });
+
+  input.addEventListener('input', () => {
+    sendButton.disabled = !input.value.trim();
+  });
+
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey && input.value.trim()) {
+      e.preventDefault();
+      handleSend();
     }
   });
 
+  sendButton.addEventListener('click', handleSend);
+
   // Set primary color from config
-  if (currentConfig.primaryColor) {
-    widget.style.setProperty('--primary-color', currentConfig.primaryColor);
+  if (config.config?.primaryColor) {
+    document.documentElement.style.setProperty('--primary-color', config.config.primaryColor);
   }
 
   // Add initial bot message

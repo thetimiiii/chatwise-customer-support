@@ -13,9 +13,9 @@ function corsHeaders() {
 
 // Handle preflight requests
 export async function OPTIONS() {
-  return new NextResponse(null, { 
+  return new NextResponse(null, {
     status: 204,
-    headers: corsHeaders()
+    headers: corsHeaders(),
   });
 }
 
@@ -66,12 +66,6 @@ export async function POST(request: Request) {
       role: msg.is_user ? 'USER' : 'ASSISTANT',
       message: msg.content
     })) || [];
-
-    // Add current message
-    conversationHistory.push({
-      role: 'USER',
-      message: message
-    });
 
     // Call Cohere API
     const cohereResponse = await fetch('https://api.cohere.ai/v1/chat', {
