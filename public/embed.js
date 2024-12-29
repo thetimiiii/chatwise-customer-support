@@ -6,15 +6,14 @@
     }
     window.chatWiseInitialized = true;
 
-    function loadScript(src, attributes = {}) {
+    function loadScript(src, config) {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = src;
             script.async = true;
             
-            // Add any custom attributes
-            Object.entries(attributes).forEach(([key, value]) => {
-                script.setAttribute(key, value);
+            Object.entries(config).forEach(([key, value]) => {
+                script.setAttribute(`data-${key}`, value);
             });
 
             script.onload = resolve;
@@ -39,46 +38,44 @@
         });
     }
 
-    async function initializeWidget(config) {
+    async function initializeWidget() {
         try {
+            if (!window.ChatwiseConfig) {
+                throw new Error('ChatwiseConfig not found');
+            }
+
+            const config = window.ChatwiseConfig;
+            const { host, websiteId, token, primaryColor } = config;
+
+            if (!host || !websiteId) {
+                throw new Error('Missing required configuration: host, websiteId');
+            }
+
             // Load styles first
-            await loadStyle(config.baseUrl + '/css/styles.css');
+            await loadStyle(`${host}/widget.css`);
             
             // Then load the widget script
-            await loadScript(config.baseUrl + '/widget.js', {
-                'data-website-id': config.websiteId,
-                'data-token': config.token,
-                'data-primary-color': config.primaryColor
+            await loadScript(`${host}/widget.js`, {
+                'website-id': websiteId,
+                'token': token || '',
+                'primary-color': primaryColor || '#2563eb'
             });
+
+            // Create container if it doesn't exist
+            if (!document.getElementById('chatwise-container')) {
+                const container = document.createElement('div');
+                container.id = 'chatwise-container';
+                document.body.appendChild(container);
+            }
         } catch (error) {
             console.error('Failed to initialize ChatWise widget:', error);
         }
     }
 
-    // Get the current script tag
-    const currentScript = document.currentScript;
-    if (!currentScript) {
-        console.error('Could not find ChatWise embed script');
-        return;
-    }
-
-    // Get configuration from script attributes
-    const config = {
-        baseUrl: currentScript.getAttribute('data-base-url') || '',
-        websiteId: currentScript.getAttribute('data-website-id'),
-        token: currentScript.getAttribute('data-token'),
-        primaryColor: currentScript.getAttribute('data-primary-color')
-    };
-
-    if (!config.websiteId) {
-        console.error('ChatWise: Missing required websiteId');
-        return;
-    }
-
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => initializeWidget(config));
+        document.addEventListener('DOMContentLoaded', initializeWidget);
     } else {
-        initializeWidget(config);
+        initializeWidget();
     }
 })();

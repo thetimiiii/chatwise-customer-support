@@ -22,6 +22,89 @@ interface EmbedChatWidgetProps {
 
 function generateEmbedCode(websiteId: string, token: string, config: WebsiteConfig) {
   return `<!-- Chatwise Support Widget -->
+<div id="chatwise-container"></div>
+<style>
+  #chatwise-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+  }
+  #chatwise-container .chat-widget {
+    font-family: 'Inter', sans-serif;
+  }
+  #chatwise-container .chat-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  #chatwise-container .chat-window {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 350px;
+    height: 500px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+  }
+  #chatwise-container .chat-header {
+    padding: 16px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #chatwise-container .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+  #chatwise-container .chat-input {
+    padding: 16px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    gap: 8px;
+  }
+  #chatwise-container .input-field {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    outline: none;
+  }
+  #chatwise-container .send-button {
+    padding: 8px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  #chatwise-container .message {
+    margin: 8px 0;
+    padding: 8px 12px;
+    border-radius: 8px;
+    max-width: 80%;
+  }
+  #chatwise-container .bot-message {
+    background: #f3f4f6;
+    margin-right: auto;
+  }
+  #chatwise-container .user-message {
+    color: white;
+    margin-left: auto;
+  }
+  #chatwise-container .hidden {
+    display: none;
+  }
+</style>
 <script>
   (function() {
     // Initialize widget configuration
@@ -30,16 +113,16 @@ function generateEmbedCode(websiteId: string, token: string, config: WebsiteConf
       token: '${token}',
       primaryColor: '${config.primaryColor}',
       preamble: '${config.preamble}',
-      host: 'https://simplesupportbot.com'
+      host: window.location.origin
     };
 
     // Load widget script
     var script = document.createElement('script');
-    script.src = 'https://simplesupportbot.com/widget.js';
+    script.src = window.location.origin + '/embed.js';
     script.async = true;
     document.head.appendChild(script);
 
-    // Load widget styles
+    // Load Inter font
     var link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
     link.rel = 'stylesheet';

@@ -5,7 +5,7 @@
             throw new Error('ChatwiseConfig not found. Please initialize window.ChatwiseConfig before loading the widget.');
         }
 
-        const required = ['websiteId', 'host'];
+        const required = ['websiteId', 'token', 'host'];
         const missing = required.filter(key => !window.ChatwiseConfig[key]);
         
         if (missing.length > 0) {
@@ -14,14 +14,6 @@
 
         return true;
     }
-
-    // Handle ResizeObserver errors
-    window.addEventListener('error', function(e) {
-        if (e.message.includes('ResizeObserver')) {
-            e.stopImmediatePropagation();
-            return false;
-        }
-    });
 
     class ChatWidget {
         constructor(config) {
@@ -33,36 +25,34 @@
                 host: config.host
             };
 
-            // Prevent multiple instances
-            if (window.chatWidgetInstance) {
-                console.warn('ChatWidget instance already exists');
-                return window.chatWidgetInstance;
-            }
-
             this.isOpen = false;
             this.messages = [];
             this.isLoading = false;
 
-            window.chatWidgetInstance = this;
             this.initialize();
         }
 
         async initialize() {
-            console.log('Initializing ChatWidget...');
             this.render();
             this.attachEventListeners();
-            console.log('ChatWidget initialization completed');
+            await this.loadInitialMessage();
+        }
+
+        async loadInitialMessage() {
+            if (this.messages.length === 0) {
+                this.messages = [{ content: this.config.preamble, isUser: false }];
+                this.renderMessages();
+            }
         }
 
         render() {
-            // Remove any existing container
-            const existingContainer = document.getElementById('chatwise-container');
-            if (!existingContainer) {
-                console.error('Chat widget container not found! Please add <div id="chatwise-container"></div> to your page.');
+            const container = document.getElementById('chatwise-container');
+            if (!container) {
+                console.error('Chat widget container not found!');
                 return;
             }
 
-            existingContainer.innerHTML = `
+            container.innerHTML = `
                 <div class="chat-widget">
                     <button class="chat-button ${this.isOpen ? 'hidden' : ''}" 
                             style="background-color: ${this.config.primaryColor}">
@@ -97,19 +87,12 @@
                 </div>
             `;
 
-            // Add initial message
-            if (!this.messages.length) {
-                this.messages = [{ content: this.config.preamble, isUser: false }];
-            }
             this.renderMessages();
         }
 
         renderMessages() {
             const messagesContainer = document.querySelector('.chat-messages');
-            if (!messagesContainer) {
-                console.error('Messages container not found!');
-                return;
-            }
+            if (!messagesContainer) return;
 
             messagesContainer.innerHTML = this.messages
                 .map(msg => `
@@ -120,7 +103,6 @@
                 `)
                 .join('');
             
-            // Scroll to bottom
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
@@ -130,10 +112,7 @@
             const input = document.querySelector('.input-field');
             const sendButton = document.querySelector('.send-button');
 
-            if (!chatButton || !closeButton || !input || !sendButton) {
-                console.error('Required elements not found!');
-                return;
-            }
+            if (!chatButton || !closeButton || !input || !sendButton) return;
 
             chatButton.addEventListener('click', () => this.toggleChat());
             closeButton.addEventListener('click', () => this.toggleChat());
@@ -158,13 +137,10 @@
 
         async handleSendMessage() {
             const input = document.querySelector('.input-field');
-            if (!input) {
-                console.error('Input field not found!');
-                return;
-            }
+            if (!input || this.isLoading) return;
 
             const message = input.value.trim();
-            if (!message || this.isLoading) return;
+            if (!message) return;
             
             input.value = '';
             this.isLoading = true;
@@ -177,12 +153,16 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': this.config.token ? `Bearer ${this.config.token}` : undefined
+                        'Authorization': `Bearer ${this.config.token}`
                     },
                     body: JSON.stringify({
                         message,
                         websiteId: this.config.websiteId,
-                        preamble: this.config.preamble
+                        token: this.config.token,
+                        config: {
+                            primaryColor: this.config.primaryColor,
+                            preamble: this.config.preamble
+                        }
                     })
                 });
 
@@ -205,30 +185,19 @@
         }
     }
 
-    function initializeChatWidget(config) {
-        new ChatWidget(config);
+    // Initialize widget when DOM is ready
+    function initializeWidget() {
+        try {
+            validateConfig();
+            new ChatWidget(window.ChatwiseConfig);
+        } catch (error) {
+            console.error('Failed to initialize chat widget:', error);
+        }
     }
 
-    // Check for configuration
-    if (!window.ChatwiseConfig) {
-        console.error('Failed to initialize chat widget: ChatwiseConfig not found. Please initialize window.ChatwiseConfig before loading the widget.');
-        return;
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeWidget);
+    } else {
+        initializeWidget();
     }
-
-    // Validate required fields
-    const { websiteId, token, primaryColor, preamble, host } = window.ChatwiseConfig;
-  
-    if (!websiteId) {
-        console.error('Missing required websiteId attribute');
-        return;
-    }
-
-    // Initialize widget with flattened configuration
-    initializeChatWidget({
-        websiteId,
-        token,
-        primaryColor,
-        preamble,
-        host
-    });
 })();
