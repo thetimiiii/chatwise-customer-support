@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,7 +22,15 @@ export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
   const [primaryColor, setPrimaryColor] = useState("#2563eb");
   const [copied, setCopied] = useState(false);
 
-  const generateEmbedCode = () => {
+  const generateWidgetEmbedCode = () => {
+    const config = {
+      websiteId,
+      token,
+      primaryColor,
+      preamble: 'You are a helpful customer support agent. Be concise and friendly in your responses.',
+      host: 'https://simplesupportbot.com'
+    };
+
     return `<!-- Add the container div -->
 <div id="chatwise-container"></div>
 
@@ -28,11 +38,11 @@ export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
 <script>
     // Initialize configuration
     window.ChatwiseConfig = {
-        websiteId: '${websiteId}',
-        token: '${token}',
-        primaryColor: '${primaryColor}',
-        preamble: 'You are a helpful customer support agent. Be concise and friendly in your responses.',
-        host: 'https://simplesupportbot.com'
+        websiteId: '${config.websiteId}',
+        token: '${config.token}',
+        primaryColor: '${config.primaryColor}',
+        preamble: '${config.preamble}',
+        host: '${config.host}'
     };
 
     // Load widget resources
@@ -40,12 +50,12 @@ export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
         // Load styles
         const link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = 'https://simplesupportbot.com/css/styles.css';
+        link.href = '${config.host}/css/styles.css';
         document.head.appendChild(link);
 
         // Load widget script
         const script = document.createElement('script');
-        script.src = 'https://simplesupportbot.com/widget.js';
+        script.src = '${config.host}/widget.js';
         script.async = true;
         document.head.appendChild(script);
     })();
@@ -54,7 +64,7 @@ export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(generateEmbedCode());
+      await navigator.clipboard.writeText(generateWidgetEmbedCode());
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -87,7 +97,7 @@ export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
           <div className="grid gap-2">
             <Label>Embed Code</Label>
             <pre className="bg-secondary p-4 rounded-lg overflow-auto max-h-[300px] text-sm">
-              <code>{generateEmbedCode()}</code>
+              <code>{generateWidgetEmbedCode()}</code>
             </pre>
           </div>
         </div>
