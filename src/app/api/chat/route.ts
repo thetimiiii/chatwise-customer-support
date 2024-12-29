@@ -8,20 +8,26 @@ function logDebug(message: string, data?: any) {
 
 // Helper function to handle CORS headers
 function corsHeaders(origin?: string | null) {
+  // Allow the specific origin or any origin if in development
   return {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': origin || '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, Origin, Accept',
+    'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Max-Age': '86400',
   };
 }
 
 export const runtime = 'edge';
 
+// Handle preflight requests
 export async function OPTIONS(request: Request) {
+  const origin = request.headers.get('origin');
+  logDebug('Handling OPTIONS request from origin:', origin);
+  
   return new NextResponse(null, {
     status: 204,
-    headers: corsHeaders(request.headers.get('origin'))
+    headers: corsHeaders(origin),
   });
 }
 
