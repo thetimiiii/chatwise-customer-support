@@ -1,17 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/integrations/supabase/client';
 
-// Helper function to handle CORS
-function corsHeaders(origin?: string | null) {
-  return {
-    'Access-Control-Allow-Origin': origin || '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Origin, Accept',
-    'Access-Control-Max-Age': '86400',
-    'Vary': 'Origin',
-  };
-}
-
 // Debug logging function
 function logDebug(message: string, data?: any) {
   console.log(`[ChatAPI Debug] ${message}`, data || '');
@@ -19,24 +8,15 @@ function logDebug(message: string, data?: any) {
 
 // Handle preflight requests
 export async function OPTIONS(request: Request) {
-  const origin = request.headers.get('origin');
-  logDebug('Handling OPTIONS request', { origin });
-
-  // Return 204 for preflight
   return new NextResponse(null, {
     status: 204,
     headers: {
-      ...corsHeaders(origin),
       'Content-Length': '0',
     }
   });
 }
 
 export async function POST(request: Request) {
-  const origin = request.headers.get('origin');
-  const headers = corsHeaders(origin);
-  logDebug('Handling POST request', { origin });
-
   try {
     const body = await request.json();
     logDebug('Request body received', body);
@@ -46,15 +26,9 @@ export async function POST(request: Request) {
     // Validate request
     if (!websiteId || !message || !token) {
       logDebug('Missing required fields', { websiteId, message, token });
-      return new NextResponse(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { 
-          status: 400,
-          headers: {
-            ...headers,
-            'Content-Type': 'application/json',
-          }
-        }
+      return NextResponse.json(
+        { error: 'Missing required fields' },
+        { status: 400 }
       );
     }
 
@@ -69,15 +43,9 @@ export async function POST(request: Request) {
 
     if (websiteError || !website) {
       logDebug('Token verification failed', { error: websiteError });
-      return new NextResponse(
-        JSON.stringify({ error: 'Invalid token or website ID' }),
-        { 
-          status: 401,
-          headers: {
-            ...headers,
-            'Content-Type': 'application/json',
-          }
-        }
+      return NextResponse.json(
+        { error: 'Invalid token or website ID' },
+        { status: 401 }
       );
     }
 
@@ -182,30 +150,12 @@ Be concise, friendly, and professional in your responses. Focus on providing acc
       logDebug('Error saving messages', { saveUserMsgError, saveAiMsgError });
     }
 
-    return new NextResponse(
-      JSON.stringify({ message: aiResponse }),
-      { 
-        status: 200,
-        headers: {
-          ...headers,
-          'Content-Type': 'application/json',
-        }
-      }
-    );
+    return NextResponse.json({ message: aiResponse });
   } catch (error) {
     logDebug('Chat API error', error);
-    return new NextResponse(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      { 
-        status: 500,
-        headers: {
-          ...headers,
-          'Content-Type': 'application/json',
-        }
-      }
-    );
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
