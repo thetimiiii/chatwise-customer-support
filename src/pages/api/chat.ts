@@ -1,13 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { supabase } from '@/integrations/supabase/client';
-import Cors from 'cors';
-
-// Initialize the cors middleware
-const cors = Cors({
-  methods: ['POST', 'OPTIONS'],
-  origin: '*', // Allow all origins
-  credentials: false, // Don't need credentials
-});
+import { Configuration, OpenAIApi } from 'openai';
 
 // Helper method to wait for a middleware to execute before continuing
 // And to throw an error when an error happens in a middleware
@@ -25,102 +18,63 @@ function runMiddleware(req: NextApiRequest, res: NextApiResponse, fn: Function) 
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Run the middleware
-  await runMiddleware(req, res, cors);
+  // await runMiddleware(req, res, cors);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const token = req.headers.authorization?.split(' ')[1];
+  const { message, websiteId } = req.body;
+
+  if (!token || !websiteId || !message) {
+    return res.status(400).json({ error: 'Missing required parameters' });
   }
 
   try {
-    const { message, websiteId, token } = req.body;
-
-    if (!message || !websiteId || !token) {
-      return res.status(400).json({ message: 'Message, website ID, and token are required' });
-    }
-
-    // Verify website exists and token is valid
+    // Verify token matches website
     const { data: website, error: websiteError } = await supabase
       .from('websites')
-      .select('id, user_id, embed_token, config')
+      .select('*')
       .eq('id', websiteId)
+      .eq('embed_token', token)
       .single();
 
     if (websiteError || !website) {
-      console.error('Website verification failed:', websiteError);
-      return res.status(404).json({ message: 'Website not found' });
+      return res.status(401).json({ error: 'Invalid token' });
     }
 
-    if (website.embed_token !== token) {
-      return res.status(401).json({ message: 'Invalid token' });
-    }
+    // Initialize OpenAI with the website's OpenAI key
+    const configuration = new Configuration({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+    const openai = new OpenAIApi(configuration);
 
-    // Check credits before making the API call
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('credits_remaining')
-      .eq('id', website.user_id)
-      .single();
-
-    if (profileError || !profile) {
-      console.error('Credit check failed:', profileError);
-      return res.status(500).json({ message: 'Failed to check credits' });
-    }
-
-    if (profile.credits_remaining <= 0) {
-      return res.status(402).json({ message: 'No credits remaining' });
-    }
-
-    // Make the API call
-    const response = await fetch('https://api.cohere.ai/v1/chat', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.COHERE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message,
-        model: 'command',
-        preamble: website.config?.preamble || "You are a helpful customer support agent. Be concise and friendly in your responses.",
-      }),
+    // Get chat response
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: website.config.preamble || "You are a helpful customer support agent." },
+        { role: "user", content: message }
+      ],
     });
 
-    if (!response.ok) {
-      console.error('Cohere API error:', response.statusText);
-      return res.status(500).json({ message: 'Failed to get chat response' });
-    }
+    const response = completion.data.choices[0]?.message?.content || "I apologize, but I am having trouble responding right now.";
 
-    const data = await response.json();
-
-    // Decrement credits after successful response
-    const { error: updateError } = await supabase.rpc('decrement_credits', {
-      user_id: website.user_id
+    // Log the chat in Supabase
+    await supabase.from('messages').insert({
+      website_id: websiteId,
+      user_message: message,
+      bot_response: response,
     });
 
-    if (updateError) {
-      console.error('Error updating credits:', updateError);
-      // Continue anyway since we got the response
-    }
-
-    // Track the chat session
-    const { error: sessionError } = await supabase
-      .from('chat_sessions')
-      .insert([{ 
-        website_id: websiteId,
-        messages_count: 1,
-        started_at: new Date().toISOString()
-      }]);
-
-    if (sessionError) {
-      console.error('Error tracking chat session:', sessionError);
-    }
-
-    return res.status(200).json({ text: data.text });
+    res.status(200).json({ response });
   } catch (error) {
-    console.error('Error in chat endpoint:', error);
-    return res.status(500).json({ message: 'Internal server error' });
+    console.error('Chat error:', error);
+    res.status(500).json({ error: 'Failed to process chat request' });
   }
 }
