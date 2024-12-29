@@ -114,7 +114,7 @@ function generateEmbedCode(websiteId: string, token: string, config: WebsiteConf
     document.head.appendChild(link);
   })();
 
-  // Initialize ChatwiseConfig
+  // Initialize ChatwiseConfig synchronously
   window.ChatwiseConfig = {
     websiteId: '${websiteId}',
     token: '${token}',
@@ -125,9 +125,16 @@ function generateEmbedCode(websiteId: string, token: string, config: WebsiteConf
 
   // Load widget script after config is set
   (function() {
+    console.log('[Chatwise] Initializing with config:', window.ChatwiseConfig);
     var script = document.createElement('script');
     script.src = window.location.origin + '/widget.js';
     script.async = true;
+    script.onerror = function(error) {
+      console.error('[Chatwise] Failed to load widget script:', error);
+    };
+    script.onload = function() {
+      console.log('[Chatwise] Widget script loaded successfully');
+    };
     document.head.appendChild(script);
   })();
 </script>`;
