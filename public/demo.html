@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatwise Support Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            line-height: 1.5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chatwise Support Demo</h1>
+        <p>This is a demo page for the Chatwise Support Widget. Click the chat button in the bottom right corner to start a conversation.</p>
+    </div>
+
+    <!-- Debug logging -->
+    <script>
+        console.log('Initial ChatwiseConfig:', window.ChatwiseConfig);
+        
+        let configValue = window.ChatwiseConfig;
+        Object.defineProperty(window, 'ChatwiseConfig', {
+            get: function() {
+                return configValue;
+            },
+            set: function(newValue) {
+                console.log('ChatwiseConfig changed:', newValue);
+                configValue = newValue;
+            }
+        });
+    </script>
+
+    <!-- Chatwise Support Widget -->
+    <script>
+        (function() {
+            // Create a global configuration object first
+            window.ChatwiseConfig = {
+                websiteId: 'demo-website-id',
+                token: 'demo-token',
+                primaryColor: '#2563eb',
+                preamble: 'Hello! How can I help you today?',
+                host: window.location.origin
+            };
+
+            // Load required resources
+            function loadResources() {
+                // Load styles
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = '/css/styles.css';
+                document.head.appendChild(link);
+
+                // Load widget script
+                const script = document.createElement('script');
+                script.src = '/widget.js';
+                script.async = true;
+                document.head.appendChild(script);
+            }
+
+            // Initialize when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadResources);
+            } else {
+                loadResources();
+            }
+        })();
+    </script>
+</body>
+</html>
