@@ -6,17 +6,28 @@ function logDebug(message: string, data?: any) {
   console.log(`[ChatAPI Debug] ${message}`, data || '');
 }
 
-// Handle preflight requests
+// Helper function to handle CORS headers
+function corsHeaders(origin?: string | null) {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Origin, Accept',
+    'Access-Control-Max-Age': '86400',
+  };
+}
+
+export const runtime = 'edge';
+
 export async function OPTIONS(request: Request) {
   return new NextResponse(null, {
     status: 204,
-    headers: {
-      'Content-Length': '0',
-    }
+    headers: corsHeaders(request.headers.get('origin'))
   });
 }
 
 export async function POST(request: Request) {
+  const headers = corsHeaders(request.headers.get('origin'));
+
   try {
     const body = await request.json();
     logDebug('Request body received', body);
@@ -26,9 +37,9 @@ export async function POST(request: Request) {
     // Validate request
     if (!websiteId || !message || !token) {
       logDebug('Missing required fields', { websiteId, message, token });
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
+      return new NextResponse(
+        JSON.stringify({ error: 'Missing required fields' }),
+        { status: 400, headers }
       );
     }
 
@@ -43,9 +54,9 @@ export async function POST(request: Request) {
 
     if (websiteError || !website) {
       logDebug('Token verification failed', { error: websiteError });
-      return NextResponse.json(
-        { error: 'Invalid token or website ID' },
-        { status: 401 }
+      return new NextResponse(
+        JSON.stringify({ error: 'Invalid token or website ID' }),
+        { status: 401, headers }
       );
     }
 
@@ -150,12 +161,18 @@ Be concise, friendly, and professional in your responses. Focus on providing acc
       logDebug('Error saving messages', { saveUserMsgError, saveAiMsgError });
     }
 
-    return NextResponse.json({ message: aiResponse });
+    return new NextResponse(
+      JSON.stringify({ message: aiResponse }),
+      { status: 200, headers }
+    );
   } catch (error) {
     logDebug('Chat API error', error);
-    return NextResponse.json({ 
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return new NextResponse(
+      JSON.stringify({ 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }),
+      { status: 500, headers }
+    );
   }
 }

@@ -272,18 +272,15 @@
     logDebug('Sending request to', apiUrl.toString());
 
     try {
-      // Send the actual request
-      logDebug('Sending POST request');
+      // Send the request
       const response = await fetch(apiUrl.toString(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Origin': window.location.origin,
           'Accept': 'application/json',
         },
         mode: 'cors',
         credentials: 'omit',
-        redirect: 'follow',
         body: JSON.stringify({
           websiteId,
           token,
