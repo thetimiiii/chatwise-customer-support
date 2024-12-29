@@ -24,25 +24,26 @@ function generateEmbedCode(websiteId: string, token: string, config: WebsiteConf
   return `<!-- Chatwise Support Widget -->
 <div id="chatwise-container"></div>
 <script>
-  console.log('[Debug] Starting to set ChatwiseConfig...');
-  try {
-    // Set up ChatwiseConfig immediately and globally
-    window.ChatwiseConfig = {
-      websiteId: '${websiteId}',
-      token: '${token}',
-      primaryColor: '${config.primaryColor}',
-      preamble: '${config.preamble}',
-      host: 'https://simplesupportbot.com'
-    };
-    console.log('[Debug] ChatwiseConfig set successfully:', window.ChatwiseConfig);
-  } catch(error) {
-    console.error('[Debug] Error setting ChatwiseConfig:', error);
-  }
+  console.log('[Debug 1] Before setting config');
+  
+  // Define ChatwiseConfig as a global variable
+  var ChatwiseConfig = {
+    websiteId: '${websiteId}',
+    token: '${token}',
+    primaryColor: '${config.primaryColor}',
+    preamble: '${config.preamble}',
+    host: 'https://simplesupportbot.com'
+  };
+  
+  // Explicitly set it on window
+  window.ChatwiseConfig = ChatwiseConfig;
+  
+  console.log('[Debug 2] After setting config:', window.ChatwiseConfig);
 </script>
 <script 
   src="https://simplesupportbot.com/widget.js" 
-  onload="console.log('[Debug] widget.js loaded')" 
-  onerror="console.error('[Debug] Failed to load widget.js')"
+  onload="console.log('[Debug 3] widget.js loaded')" 
+  onerror="console.error('[Debug 3] Failed to load widget.js')"
 ></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
