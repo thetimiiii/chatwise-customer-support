@@ -9,7 +9,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "build:widget": "vite build --config vite.widget.config.ts"
+    "build:widget": "webpack --config webpack.widget.config.js",
+    "build:widget:vite": "vite build --config vite.widget.config.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -90,6 +91,10 @@
     "tailwindcss": "^3.4.11",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1"
-  }
+    "vite": "^5.4.1",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "ts-loader": "^9.5.1"
+  },
+  "type": "module"
 }
