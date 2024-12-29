@@ -1,22 +1,19 @@
 (function() {
-    // Check if configuration exists
-    if (!window.ChatwiseConfig) {
-        console.error('Chatwise configuration not found');
-        return;
-    }
+    // Validate configuration
+    function validateConfig() {
+        if (!window.ChatwiseConfig) {
+            throw new Error('ChatwiseConfig not found. Please initialize window.ChatwiseConfig before loading the widget.');
+        }
 
-    // Validate required fields
-    if (!window.ChatwiseConfig.websiteId) {
-        console.error('Missing required websiteId attribute');
-        return;
-    }
+        const required = ['websiteId', 'host'];
+        const missing = required.filter(key => !window.ChatwiseConfig[key]);
+        
+        if (missing.length > 0) {
+            throw new Error(`Missing required configuration: ${missing.join(', ')}`);
+        }
 
-    // Debug logging
-    console.log('Widget.js loaded, configuration:', {
-        websiteId: window.ChatwiseConfig.websiteId,
-        token: window.ChatwiseConfig.token,
-        host: window.ChatwiseConfig.host
-    });
+        return true;
+    }
 
     // Handle ResizeObserver errors
     window.addEventListener('error', function(e) {
@@ -28,24 +25,19 @@
 
     class ChatWidget {
         constructor(config) {
-            if (!config || !config.websiteId) {
-                console.error('ChatWidget initialization failed: Missing required websiteId');
-                return;
-            }
+            this.config = {
+                primaryColor: config.primaryColor || '#2563eb',
+                preamble: config.preamble || 'How can I help you today?',
+                websiteId: config.websiteId,
+                token: config.token,
+                host: config.host
+            };
 
             // Prevent multiple instances
             if (window.chatWidgetInstance) {
                 console.warn('ChatWidget instance already exists');
                 return window.chatWidgetInstance;
             }
-
-            this.config = {
-                primaryColor: config.primaryColor || '#2563eb',
-                preamble: config.preamble || 'How can I help you today?',
-                websiteId: config.websiteId,
-                token: config.token,
-                host: config.host || window.location.origin
-            };
 
             this.isOpen = false;
             this.messages = [];
@@ -65,15 +57,12 @@
         render() {
             // Remove any existing container
             const existingContainer = document.getElementById('chatwise-container');
-            if (existingContainer) {
-                existingContainer.remove();
+            if (!existingContainer) {
+                console.error('Chat widget container not found! Please add <div id="chatwise-container"></div> to your page.');
+                return;
             }
 
-            const container = document.createElement('div');
-            container.id = 'chatwise-container';
-            document.body.appendChild(container);
-
-            container.innerHTML = `
+            existingContainer.innerHTML = `
                 <div class="chat-widget">
                     <button class="chat-button ${this.isOpen ? 'hidden' : ''}" 
                             style="background-color: ${this.config.primaryColor}">
@@ -216,6 +205,11 @@
         }
     }
 
-    // Initialize widget with global config
-    new ChatWidget(window.ChatwiseConfig);
+    // Initialize widget
+    try {
+        validateConfig();
+        new ChatWidget(window.ChatwiseConfig);
+    } catch (error) {
+        console.error('Failed to initialize chat widget:', error.message);
+    }
 })();
