@@ -236,10 +236,19 @@
   const input = container.querySelector('input');
   const sendButton = container.querySelector('button:last-child');
 
+  // Debug logging function
+  function logDebug(message, data) {
+    console.log(`[ChatWidget Debug] ${message}`, data || '');
+  }
+
   // Add message to chat
-  function addMessage(message, isUser = false) {
+  function addMessage(message, isUser = false, isError = false) {
     const messageEl = document.createElement('div');
     messageEl.className = `chatwise-message ${isUser ? 'user' : 'bot'}`;
+    if (isError) {
+      messageEl.style.background = '#fee2e2';
+      messageEl.style.color = '#991b1b';
+    }
     messageEl.textContent = message;
     messagesContainer.appendChild(messageEl);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -247,13 +256,42 @@
 
   // Send message to API
   async function sendMessage(message) {
+    logDebug('Preparing to send message', { message });
+    
+    // Validate configuration
+    if (!websiteId || !token) {
+      logDebug('Missing configuration', { websiteId, token });
+      throw new Error('Widget configuration is incomplete. Please check your setup.');
+    }
+
     const apiUrl = new URL('/api/chat', host);
+    logDebug('Sending request to', apiUrl.toString());
+
     try {
+      // First, try an OPTIONS request to check CORS
+      logDebug('Sending preflight request');
+      const preflightResponse = await fetch(apiUrl.toString(), {
+        method: 'OPTIONS',
+        headers: {
+          'Origin': window.location.origin,
+        },
+      });
+
+      if (!preflightResponse.ok) {
+        logDebug('Preflight request failed', {
+          status: preflightResponse.status,
+          statusText: preflightResponse.statusText
+        });
+      }
+
+      // Send the actual request
+      logDebug('Sending POST request');
       const response = await fetch(apiUrl.toString(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Origin': window.location.origin,
+          'Accept': 'application/json',
         },
         mode: 'cors',
         credentials: 'omit',
@@ -265,16 +303,27 @@
         }),
       });
 
+      logDebug('Received response', {
+        status: response.status,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        logDebug('Response error', errorData);
+        throw new Error(errorData.error || errorData.details || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      logDebug('Received data', data);
       return data.message;
     } catch (error) {
-      console.error('Error sending message:', error);
-      throw new Error('I apologize, but I am having trouble responding right now. Please try again in a moment.');
+      logDebug('Error in sendMessage', error);
+      if (error.message.includes('Failed to fetch')) {
+        throw new Error('Unable to connect to the chat service. Please check your internet connection and try again.');
+      }
+      throw error;
     }
   }
 
@@ -292,7 +341,8 @@
       const response = await sendMessage(message);
       addMessage(response);
     } catch (error) {
-      addMessage(error.message);
+      logDebug('Error in handleSend', error);
+      addMessage(error.message, false, true);
     } finally {
       input.disabled = false;
       sendButton.disabled = false;
