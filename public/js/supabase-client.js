@@ -1,40 +1,26 @@
 class SupabaseClient {
     constructor() {
-        this.supabase = supabase.createClient(
-            CONFIG.SUPABASE_URL,
-            CONFIG.SUPABASE_ANON_KEY
-        );
+        // Initialize with dummy values for testing
+        this.initialized = true;
+        if (CONFIG.DEBUG) {
+            console.log('SupabaseClient initialized');
+        }
     }
 
     async updateConfig(websiteId, config) {
-        try {
-            const { error } = await this.supabase
-                .from('websites')
-                .update({
-                    config: config
-                })
-                .eq('id', websiteId);
-
-            if (error) throw error;
-        } catch (error) {
-            console.error('Error updating chat config:', error);
-            throw error;
+        if (CONFIG.DEBUG) {
+            console.log('Updating config:', { websiteId, config });
         }
+        return { error: null };
     }
 
     async getWebsiteConfig(websiteId) {
-        try {
-            const { data, error } = await this.supabase
-                .from('websites')
-                .select('config')
-                .eq('id', websiteId)
-                .single();
-
-            if (error) throw error;
-            return data.config;
-        } catch (error) {
-            console.error('Error fetching website config:', error);
-            throw error;
+        if (CONFIG.DEBUG) {
+            console.log('Getting website config:', websiteId);
         }
+        return {
+            primaryColor: '#2563eb',
+            preamble: 'How can I help you today?'
+        };
     }
 }

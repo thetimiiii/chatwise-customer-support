@@ -1,12 +1,22 @@
+// Add global error handler
+window.onerror = function(msg, url, lineNo, columnNo, error) {
+    console.log('Error: ' + msg + '\nURL: ' + url + '\nLine: ' + lineNo + '\nColumn: ' + columnNo + '\nError object: ' + JSON.stringify(error));
+    return false;
+};
+
 class ChatWidget {
     constructor(props) {
+        if (CONFIG.DEBUG) {
+            console.log('Initializing ChatWidget with props:', props);
+        }
+
         this.props = props;
         this.isOpen = false;
         this.messages = [];
         this.isLoading = false;
         this.config = {
             primaryColor: props.primaryColor || '#2563eb',
-            preamble: props.preamble || 'You are a helpful customer support agent. Be concise and friendly in your responses.'
+            preamble: props.preamble || 'How can I help you today?'
         };
 
         this.supabaseClient = new SupabaseClient();
@@ -14,26 +24,25 @@ class ChatWidget {
     }
 
     async initialize() {
+        if (CONFIG.DEBUG) {
+            console.log('Widget initialization started');
+        }
         await this.fetchConfig();
         this.render();
         this.attachEventListeners();
+        if (CONFIG.DEBUG) {
+            console.log('Widget initialization completed');
+        }
     }
 
     async fetchConfig() {
         if (this.props.token) {
             try {
-                const response = await fetch(
-                    `${CONFIG.DASHBOARD_URL}/api/websites/${this.props.websiteId}/config?token=${this.props.token}`,
-                    {
-                        headers: {
-                            'Origin': window.location.origin,
-                        },
-                        credentials: 'include',
-                        mode: 'cors',
-                    }
-                );
-                if (!response.ok) throw new Error('Failed to fetch website configuration');
-                this.config = await response.json();
+                if (CONFIG.DEBUG) {
+                    console.log('Fetching config for website:', this.props.websiteId);
+                }
+                const config = await this.supabaseClient.getWebsiteConfig(this.props.websiteId);
+                this.config = { ...this.config, ...config };
             } catch (error) {
                 console.error('Error fetching website config:', error);
             }
@@ -45,6 +54,10 @@ class ChatWidget {
         container.id = 'chat-widget-container';
         document.body.appendChild(container);
         
+        if (CONFIG.DEBUG) {
+            console.log('Rendering widget with config:', this.config);
+        }
+
         container.innerHTML = `
             <div class="chat-widget">
                 <button class="chat-button ${this.isOpen ? 'hidden' : ''}" 
@@ -80,20 +93,22 @@ class ChatWidget {
             </div>
         `;
 
-        // Add styles
-        if (!document.querySelector('#chat-widget-styles')) {
-            const link = document.createElement('link');
-            link.id = 'chat-widget-styles';
-            link.rel = 'stylesheet';
-            link.href = `${CONFIG.DASHBOARD_URL}/css/styles.css`;
-            document.head.appendChild(link);
-        }
-
+        // Add initial message
+        this.messages = [{ content: this.config.preamble, isUser: false }];
         this.renderMessages();
+
+        if (CONFIG.DEBUG) {
+            console.log('Widget rendered successfully');
+        }
     }
 
     renderMessages() {
         const messagesContainer = document.querySelector('.chat-messages');
+        if (!messagesContainer) {
+            console.error('Messages container not found!');
+            return;
+        }
+
         messagesContainer.innerHTML = this.messages
             .map(msg => `
                 <div class="message ${msg.isUser ? 'user-message' : 'bot-message'}"
@@ -113,8 +128,20 @@ class ChatWidget {
         const input = document.querySelector('.input-field');
         const sendButton = document.querySelector('.send-button');
 
-        chatButton.addEventListener('click', () => this.toggleChat());
-        closeButton.addEventListener('click', () => this.toggleChat());
+        if (!chatButton || !closeButton || !input || !sendButton) {
+            console.error('Required elements not found!');
+            return;
+        }
+
+        chatButton.addEventListener('click', () => {
+            if (CONFIG.DEBUG) console.log('Chat button clicked');
+            this.toggleChat();
+        });
+
+        closeButton.addEventListener('click', () => {
+            if (CONFIG.DEBUG) console.log('Close button clicked');
+            this.toggleChat();
+        });
         
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -124,31 +151,60 @@ class ChatWidget {
         });
         
         sendButton.addEventListener('click', () => this.handleSendMessage());
+
+        if (CONFIG.DEBUG) {
+            console.log('Event listeners attached');
+        }
     }
 
     toggleChat() {
         this.isOpen = !this.isOpen;
         this.render();
         if (this.isOpen) {
-            document.querySelector('.input-field').focus();
+            document.querySelector('.input-field')?.focus();
         }
     }
 
     async handleSendMessage() {
         const input = document.querySelector('.input-field');
+        if (!input) {
+            console.error('Input field not found!');
+            return;
+        }
+
         const message = input.value.trim();
-        
         if (!message || this.isLoading) return;
         
         input.value = '';
         this.isLoading = true;
         
+        if (CONFIG.DEBUG) {
+            console.log('Sending message:', message);
+        }
+
         this.messages.push({ content: message, isUser: true });
         this.renderMessages();
 
         try {
-            const response = await this.getChatResponse(message);
-            this.messages.push({ content: response, isUser: false });
+            const response = await fetch(`${CONFIG.DASHBOARD_URL}/api/chat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': this.props.token ? `Bearer ${this.props.token}` : undefined
+                },
+                body: JSON.stringify({
+                    message,
+                    websiteId: this.props.websiteId,
+                    preamble: this.config.preamble
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to get chat response');
+            }
+
+            const data = await response.json();
+            this.messages.push({ content: data.response, isUser: false });
         } catch (error) {
             console.error('Chat error:', error);
             this.messages.push({ 
@@ -160,40 +216,25 @@ class ChatWidget {
             this.renderMessages();
         }
     }
-
-    async getChatResponse(message) {
-        const response = await fetch(`${CONFIG.DASHBOARD_URL}/api/chat`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': this.props.token ? `Bearer ${this.props.token}` : undefined
-            },
-            body: JSON.stringify({
-                message,
-                websiteId: this.props.websiteId,
-                preamble: this.config.preamble
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to get chat response');
-        }
-
-        const data = await response.json();
-        return data.response;
-    }
 }
 
 // Initialize widget when script is loaded
 const script = document.currentScript;
-const websiteId = script.getAttribute('data-website-id');
-const token = script.getAttribute('data-token');
-const primaryColor = script.getAttribute('data-primary-color');
+if (script) {
+    const websiteId = script.getAttribute('data-website-id');
+    const token = script.getAttribute('data-token');
+    const primaryColor = script.getAttribute('data-primary-color');
 
-if (websiteId) {
-    new ChatWidget({
-        websiteId,
-        token,
-        primaryColor
-    });
+    if (websiteId) {
+        if (CONFIG.DEBUG) {
+            console.log('Initializing widget with:', { websiteId, token, primaryColor });
+        }
+        new ChatWidget({
+            websiteId,
+            token,
+            primaryColor
+        });
+    } else {
+        console.error('Missing required websiteId attribute');
+    }
 }
