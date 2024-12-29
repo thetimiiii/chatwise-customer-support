@@ -30,10 +30,10 @@ function generateEmbedCode(websiteId: string, token: string, config: WebsiteConf
     token: '${token}',
     primaryColor: '${config.primaryColor}',
     preamble: '${config.preamble}',
-    host: window.location.origin
+    host: 'https://simplesupportbot.com'  // Always use your domain for API
   };
 </script>
-<script src="${window.location.origin}/widget.js"></script>
+<script src="https://simplesupportbot.com/widget.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   #chatwise-container {
