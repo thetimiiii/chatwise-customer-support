@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { supabase } from '@/integrations/supabase/client';
 
 // Helper function to handle CORS
-function corsHeaders() {
+function corsHeaders(origin?: string | null) {
   return {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': origin || '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Origin',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, Origin, Accept',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
   };
@@ -19,25 +19,23 @@ function logDebug(message: string, data?: any) {
 
 // Handle preflight requests
 export async function OPTIONS(request: Request) {
-  logDebug('Handling OPTIONS request', {
-    origin: request.headers.get('origin'),
-    method: request.method,
-  });
+  const origin = request.headers.get('origin');
+  logDebug('Handling OPTIONS request', { origin });
 
+  // Return 204 for preflight
   return new NextResponse(null, {
     status: 204,
     headers: {
-      ...corsHeaders(),
+      ...corsHeaders(origin),
       'Content-Length': '0',
-      'Connection': 'keep-alive',
     }
   });
 }
 
 export async function POST(request: Request) {
-  const headers = corsHeaders();
-  const requestOrigin = request.headers.get('origin');
-  logDebug('Handling POST request', { origin: requestOrigin });
+  const origin = request.headers.get('origin');
+  const headers = corsHeaders(origin);
+  logDebug('Handling POST request', { origin });
 
   try {
     const body = await request.json();
@@ -60,8 +58,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verify token
-    logDebug('Verifying token', { websiteId, token });
+    // Verify token and get website data
+    logDebug('Verifying token and fetching website data', { websiteId, token });
     const { data: website, error: websiteError } = await supabase
       .from('websites')
       .select('*')
@@ -83,6 +81,17 @@ export async function POST(request: Request) {
       );
     }
 
+    // Get website content and configuration
+    const { data: websiteContent, error: contentError } = await supabase
+      .from('website_content')
+      .select('*')
+      .eq('website_id', websiteId)
+      .single();
+
+    if (contentError) {
+      logDebug('Error fetching website content', contentError);
+    }
+
     // Get conversation history
     logDebug('Fetching conversation history', { websiteId });
     const { data: messages, error: historyError } = await supabase
@@ -102,9 +111,21 @@ export async function POST(request: Request) {
       message: msg.content
     })) || [];
 
+    // Prepare website context
+    const websiteContext = websiteContent?.content || '';
+    const defaultPreamble = `You are an AI assistant specifically trained to help with questions about ${website.name}. 
+You have access to the following information about the website:
+
+${websiteContext}
+
+Please use this information to provide accurate and helpful responses. If you're unsure about something or if the information isn't in the provided context, please say so instead of making assumptions.
+
+Be concise, friendly, and professional in your responses. Focus on providing accurate information from the website context.`;
+
     logDebug('Calling Cohere API', {
       messageLength: message.length,
-      historyLength: conversationHistory.length
+      historyLength: conversationHistory.length,
+      contextLength: websiteContext.length
     });
 
     // Call Cohere API
@@ -118,7 +139,9 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         message: message,
         chat_history: conversationHistory,
-        preamble: config?.preamble || "You are a helpful customer support agent. Be concise and friendly in your responses.",
+        preamble: config?.preamble || defaultPreamble,
+        temperature: 0.7,
+        connectors: [{ id: "web-search" }],
       }),
     });
 

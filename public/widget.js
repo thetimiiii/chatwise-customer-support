@@ -264,26 +264,14 @@
       throw new Error('Widget configuration is incomplete. Please check your setup.');
     }
 
+    // Ensure we're using HTTPS
     const apiUrl = new URL('/api/chat', host);
+    if (apiUrl.protocol === 'http:') {
+      apiUrl.protocol = 'https:';
+    }
     logDebug('Sending request to', apiUrl.toString());
 
     try {
-      // First, try an OPTIONS request to check CORS
-      logDebug('Sending preflight request');
-      const preflightResponse = await fetch(apiUrl.toString(), {
-        method: 'OPTIONS',
-        headers: {
-          'Origin': window.location.origin,
-        },
-      });
-
-      if (!preflightResponse.ok) {
-        logDebug('Preflight request failed', {
-          status: preflightResponse.status,
-          statusText: preflightResponse.statusText
-        });
-      }
-
       // Send the actual request
       logDebug('Sending POST request');
       const response = await fetch(apiUrl.toString(), {
@@ -295,6 +283,7 @@
         },
         mode: 'cors',
         credentials: 'omit',
+        redirect: 'follow',
         body: JSON.stringify({
           websiteId,
           token,
@@ -310,7 +299,13 @@
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
+        }
         logDebug('Response error', errorData);
         throw new Error(errorData.error || errorData.details || `HTTP error! status: ${response.status}`);
       }
