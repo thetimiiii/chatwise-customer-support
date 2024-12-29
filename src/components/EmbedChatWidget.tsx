@@ -23,12 +23,12 @@ export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
   const [copied, setCopied] = useState(false)
 
   const generateEmbedCode = () => {
-    return `<!-- Add this container div -->
+    return `<!-- Add the container div -->
 <div id="chatwise-container"></div>
 
-<!-- Updated Chatwise Support Widget -->
+<!-- Initialize Chatwise Widget -->
 <script>
-    // Set up configuration before loading any scripts
+    // Initialize configuration first
     window.ChatwiseConfig = {
         websiteId: '${websiteId}',
         token: '${token}',
@@ -36,37 +36,42 @@ export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
         preamble: 'You are a helpful customer support agent. Be concise and friendly in your responses.',
         host: 'https://simplesupportbot.com'
     };
+</script>
 
-    // Function to load the widget
-    function loadChatwiseWidget() {
+<!-- Initialize widget after config -->
+<script>
+    function initializeChatWidget() {
+        if (typeof window.ChatwiseConfig === 'undefined') {
+            console.error("ChatwiseConfig not found. Please configure before initializing.");
+            return;
+        }
+
+        // Load widget resources
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = window.ChatwiseConfig.host + '/css/styles.css';
+        document.head.appendChild(link);
+
         // Load widget script
         const script = document.createElement('script');
-        script.src = 'https://simplesupportbot.com/widget.js';
+        script.src = window.ChatwiseConfig.host + '/widget.js';
         script.async = true;
-        script.onerror = () => console.error('Failed to load widget script');
-        script.onload = () => console.log('Widget script loaded successfully');
+        script.onerror = function() {
+            console.error('Failed to load Chatwise widget script');
+        };
         document.head.appendChild(script);
-
-        // Load styles
-        const link = document.createElement('link');
-        link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
-        link.rel = 'stylesheet';
-        document.head.appendChild(link);
     }
 
-    // Load widget when DOM is ready
+    // Initialize when DOM is ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', loadChatwiseWidget);
+        document.addEventListener('DOMContentLoaded', initializeChatWidget);
     } else {
-        loadChatwiseWidget();
+        initializeChatWidget();
     }
 </script>
 
 <!-- Debug logging -->
 <script>
-    // Debug logging
-    console.log('Before initialization:', window.ChatwiseConfig);
-    
     // Monitor ChatwiseConfig
     let configValue = window.ChatwiseConfig;
     Object.defineProperty(window, 'ChatwiseConfig', {
