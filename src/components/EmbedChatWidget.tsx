@@ -6,56 +6,41 @@ import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
 import type { Website } from "@/types/website"
+import { ChatWidget } from './chat/ChatWidget';
 
 interface EmbedChatWidgetProps {
   website: Website;
-}
-
-function generateEmbedCode(website: Website) {
-  return `<!-- Chatwise Support Widget -->
-<script>
-  (function() {
-    // Initialize widget configuration
-    window.ChatwiseWidget = {
-      websiteId: '${website.id}',
-      token: '${website.embed_token}',
-      config: ${JSON.stringify(website.config)},
-      host: 'https://simplesupportbot.com'
-    };
-
-    // Load widget script
-    var script = document.createElement('script');
-    script.src = 'https://simplesupportbot.com/widget.js';
-    script.async = true;
-    document.head.appendChild(script);
-
-    // Load widget styles
-    var link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-  })();
-</script>`;
 }
 
 export function EmbedChatWidget({ website }: EmbedChatWidgetProps) {
   const { toast } = useToast()
   const [copied, setCopied] = useState(false)
 
+  const embedCode = `<!-- Chatwise Widget -->
+<script>
+  window.ChatwiseWidget = {
+    websiteId: "${website.id}",
+    token: "${website.embed_token}",
+    config: ${JSON.stringify(website.config, null, 2)},
+    host: "${process.env.NEXT_PUBLIC_APP_URL || 'https://simplesupportbot.com'}"
+  };
+</script>
+<script async src="${process.env.NEXT_PUBLIC_APP_URL || 'https://simplesupportbot.com'}/widget.js"></script>`;
+
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(generateEmbedCode(website))
+      await navigator.clipboard.writeText(embedCode)
       setCopied(true)
       toast({
         title: "Copied!",
-        description: "Embed code copied to clipboard",
+        description: "Widget code copied to clipboard.",
       })
       setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
-      console.error('Failed to copy:', err)
+    } catch (error) {
+      console.error('Failed to copy:', error)
       toast({
         title: "Error",
-        description: "Failed to copy embed code",
+        description: "Failed to copy code to clipboard.",
         variant: "destructive",
       })
     }
@@ -77,8 +62,16 @@ export function EmbedChatWidget({ website }: EmbedChatWidgetProps) {
           <div className="grid gap-2">
             <Label>Embed Code</Label>
             <pre className="bg-secondary p-4 rounded-lg overflow-auto max-h-[300px] text-sm">
-              <code>{generateEmbedCode(website)}</code>
+              <code>{embedCode}</code>
             </pre>
+          </div>
+          <div className="relative h-[600px] border rounded-lg bg-white p-4">
+            <ChatWidget
+              websiteId={website.id}
+              token={website.embed_token}
+              config={website.config}
+              host={process.env.NEXT_PUBLIC_APP_URL || 'https://simplesupportbot.com'}
+            />
           </div>
         </div>
         <div className="flex justify-end gap-4">
