@@ -23,68 +23,45 @@ export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
   const [copied, setCopied] = useState(false)
 
   const generateEmbedCode = () => {
-    return `<!-- Add the container div -->
-<div id="chatwise-container"></div>
-
-<!-- Initialize Chatwise Widget -->
+    return `<!-- Chatwise Support Widget -->
 <script>
-    // Initialize configuration first
+  (function() {
+    // Initialize widget configuration - CHANGED FROM ChatwiseWidget TO ChatwiseConfig
     window.ChatwiseConfig = {
-        websiteId: '${websiteId}',
-        token: '${token}',
-        primaryColor: '${primaryColor}',
-        preamble: 'You are a helpful customer support agent. Be concise and friendly in your responses.',
-        host: 'https://simplesupportbot.com'
+      websiteId: '${websiteId}',
+      token: '${token}',
+      // Moved these out of the nested config object
+      primaryColor: '${primaryColor}',
+      preamble: 'You are a helpful customer support agent. Be concise and friendly in your responses.',
+      host: 'https://simplesupportbot.com'
     };
+
+    // Load widget script
+    var script = document.createElement('script');
+    script.src = 'https://simplesupportbot.com/widget.js';
+    script.async = true;
+    
+    // Add error handling
+    script.onerror = function() {
+      console.error('Failed to load Chatwise widget script');
+    };
+    
+    script.onload = function() {
+      console.log('Chatwise widget script loaded successfully');
+    };
+    
+    document.head.appendChild(script);
+
+    // Load widget styles
+    var link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  })();
 </script>
 
-<!-- Initialize widget after config -->
-<script>
-    function initializeChatWidget() {
-        if (typeof window.ChatwiseConfig === 'undefined') {
-            console.error("ChatwiseConfig not found. Please configure before initializing.");
-            return;
-        }
-
-        // Load widget resources
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = window.ChatwiseConfig.host + '/css/styles.css';
-        document.head.appendChild(link);
-
-        // Load widget script
-        const script = document.createElement('script');
-        script.src = window.ChatwiseConfig.host + '/widget.js';
-        script.async = true;
-        script.onerror = function() {
-            console.error('Failed to load Chatwise widget script');
-        };
-        document.head.appendChild(script);
-    }
-
-    // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initializeChatWidget);
-    } else {
-        initializeChatWidget();
-    }
-</script>
-
-<!-- Debug logging -->
-<script>
-    // Monitor ChatwiseConfig
-    let configValue = window.ChatwiseConfig;
-    Object.defineProperty(window, 'ChatwiseConfig', {
-        get: function() {
-            console.log('Reading ChatwiseConfig:', configValue);
-            return configValue;
-        },
-        set: function(newValue) {
-            console.log('Setting ChatwiseConfig:', newValue);
-            configValue = newValue;
-        }
-    });
-</script>`
+<!-- Add this container div before the closing </body> tag -->
+<div id="chatwise-container"></div>`
   }
 
   const copyToClipboard = async () => {
