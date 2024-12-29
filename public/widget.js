@@ -39,11 +39,13 @@
                     headers: {
                         'Accept': 'text/javascript',
                         'Authorization': `Bearer ${this.token}`
-                    }
+                    },
+                    mode: 'cors',
+                    credentials: 'same-origin'
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to load styles');
+                    throw new Error(`Failed to load styles: ${response.status}`);
                 }
 
                 const styles = await response.text();
@@ -51,8 +53,7 @@
                 styleEl.textContent = styles;
                 document.head.appendChild(styleEl);
             } catch (error) {
-                console.error('Failed to load widget styles:', error);
-                // Fallback to basic styles if loading fails
+                console.warn('Using fallback styles:', error);
                 const styleEl = document.createElement('style');
                 styleEl.textContent = this.getBasicStyles();
                 document.head.appendChild(styleEl);
