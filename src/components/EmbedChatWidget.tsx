@@ -106,27 +106,29 @@ function generateEmbedCode(websiteId: string, token: string, config: WebsiteConf
   }
 </style>
 <script>
+  // First, load the Inter font
   (function() {
-    // Initialize widget configuration
-    window.ChatwiseConfig = {
-      websiteId: '${websiteId}',
-      token: '${token}',
-      primaryColor: '${config.primaryColor}',
-      preamble: '${config.preamble}',
-      host: window.location.origin
-    };
-
-    // Load widget script
-    var script = document.createElement('script');
-    script.src = window.location.origin + '/embed.js';
-    script.async = true;
-    document.head.appendChild(script);
-
-    // Load Inter font
     var link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
+  })();
+
+  // Initialize ChatwiseConfig
+  window.ChatwiseConfig = {
+    websiteId: '${websiteId}',
+    token: '${token}',
+    primaryColor: '${config.primaryColor}',
+    preamble: '${config.preamble}',
+    host: window.location.origin
+  };
+
+  // Load widget script after config is set
+  (function() {
+    var script = document.createElement('script');
+    script.src = window.location.origin + '/widget.js';
+    script.async = true;
+    document.head.appendChild(script);
   })();
 </script>`;
 }

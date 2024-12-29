@@ -1,12 +1,29 @@
 (function() {
-    // Validate configuration
-    function validateConfig() {
-        if (!window.ChatwiseConfig) {
-            throw new Error('ChatwiseConfig not found. Please initialize window.ChatwiseConfig before loading the widget.');
-        }
+    // Wait for ChatwiseConfig to be available
+    function waitForConfig(maxAttempts = 50) {
+        let attempts = 0;
+        
+        return new Promise((resolve, reject) => {
+            function checkConfig() {
+                attempts++;
+                
+                if (window.ChatwiseConfig) {
+                    resolve(window.ChatwiseConfig);
+                } else if (attempts >= maxAttempts) {
+                    reject(new Error('ChatwiseConfig not found after maximum attempts'));
+                } else {
+                    setTimeout(checkConfig, 100); // Check every 100ms
+                }
+            }
+            
+            checkConfig();
+        });
+    }
 
+    // Validate configuration
+    function validateConfig(config) {
         const required = ['websiteId', 'token', 'host'];
-        const missing = required.filter(key => !window.ChatwiseConfig[key]);
+        const missing = required.filter(key => !config[key]);
         
         if (missing.length > 0) {
             throw new Error(`Missing required configuration: ${missing.join(', ')}`);
@@ -185,16 +202,18 @@
         }
     }
 
-    // Initialize widget when DOM is ready
-    function initializeWidget() {
+    // Initialize widget with retry mechanism
+    async function initializeWidget() {
         try {
-            validateConfig();
-            new ChatWidget(window.ChatwiseConfig);
+            const config = await waitForConfig();
+            validateConfig(config);
+            new ChatWidget(config);
         } catch (error) {
             console.error('Failed to initialize chat widget:', error);
         }
     }
 
+    // Start initialization when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeWidget);
     } else {
