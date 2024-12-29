@@ -205,11 +205,30 @@
         }
     }
 
-    // Initialize widget
-    try {
-        validateConfig();
-        new ChatWidget(window.ChatwiseConfig);
-    } catch (error) {
-        console.error('Failed to initialize chat widget:', error.message);
+    function initializeChatWidget(config) {
+        new ChatWidget(config);
     }
+
+    // Check for configuration
+    if (!window.ChatwiseConfig) {
+        console.error('Failed to initialize chat widget: ChatwiseConfig not found. Please initialize window.ChatwiseConfig before loading the widget.');
+        return;
+    }
+
+    // Validate required fields
+    const { websiteId, token, primaryColor, preamble, host } = window.ChatwiseConfig;
+  
+    if (!websiteId) {
+        console.error('Missing required websiteId attribute');
+        return;
+    }
+
+    // Initialize widget with flattened configuration
+    initializeChatWidget({
+        websiteId,
+        token,
+        primaryColor,
+        preamble,
+        host
+    });
 })();

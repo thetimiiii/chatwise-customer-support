@@ -12,27 +12,24 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
+import { useToast } from "@/hooks/use-toast"
+import type { WebsiteConfig } from "@/types/website"
 
 interface EmbedChatWidgetProps {
   websiteId: string
   token: string
 }
 
-export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
-  const [primaryColor, setPrimaryColor] = useState("#2563eb")
-  const [copied, setCopied] = useState(false)
-
-  const generateEmbedCode = () => {
-    return `<!-- Chatwise Support Widget -->
+function generateEmbedCode(websiteId: string, token: string, config: WebsiteConfig) {
+  return `<!-- Chatwise Support Widget -->
 <script>
   (function() {
-    // Initialize widget configuration - CHANGED FROM ChatwiseWidget TO ChatwiseConfig
+    // Initialize widget configuration
     window.ChatwiseConfig = {
       websiteId: '${websiteId}',
       token: '${token}',
-      // Moved these out of the nested config object
-      primaryColor: '${primaryColor}',
-      preamble: 'You are a helpful customer support agent. Be concise and friendly in your responses.',
+      primaryColor: '${config.primaryColor}',
+      preamble: '${config.preamble}',
       host: 'https://simplesupportbot.com'
     };
 
@@ -40,16 +37,6 @@ export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
     var script = document.createElement('script');
     script.src = 'https://simplesupportbot.com/widget.js';
     script.async = true;
-    
-    // Add error handling
-    script.onerror = function() {
-      console.error('Failed to load Chatwise widget script');
-    };
-    
-    script.onload = function() {
-      console.log('Chatwise widget script loaded successfully');
-    };
-    
     document.head.appendChild(script);
 
     // Load widget styles
@@ -58,19 +45,35 @@ export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
     link.rel = 'stylesheet';
     document.head.appendChild(link);
   })();
-</script>
+</script>`;
+}
 
-<!-- Add this container div before the closing </body> tag -->
-<div id="chatwise-container"></div>`
+export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
+  const { toast } = useToast()
+  const [primaryColor, setPrimaryColor] = useState("#2563eb")
+  const [copied, setCopied] = useState(false)
+
+  const config: WebsiteConfig = {
+    primaryColor,
+    preamble: 'You are a helpful customer support agent. Be concise and friendly in your responses.',
   }
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(generateEmbedCode())
+      await navigator.clipboard.writeText(generateEmbedCode(websiteId, token, config))
+      toast({
+        title: "Copied!",
+        description: "Embed code copied to clipboard",
+      })
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
       console.error("Failed to copy code:", err)
+      toast({
+        title: "Error",
+        description: "Failed to copy embed code",
+        variant: "destructive",
+      })
     }
   }
 
@@ -99,7 +102,7 @@ export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
           <div className="grid gap-2">
             <Label>Embed Code</Label>
             <pre className="bg-secondary p-4 rounded-lg overflow-auto max-h-[300px] text-sm">
-              <code>{generateEmbedCode()}</code>
+              <code>{generateEmbedCode(websiteId, token, config)}</code>
             </pre>
           </div>
         </div>
