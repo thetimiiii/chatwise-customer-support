@@ -23,6 +23,18 @@ interface EmbedChatWidgetProps {
 function generateEmbedCode(websiteId: string, token: string, config: WebsiteConfig) {
   return `<!-- Chatwise Support Widget -->
 <div id="chatwise-container"></div>
+<script>
+  // Set up ChatwiseConfig immediately and globally
+  window.ChatwiseConfig = {
+    websiteId: '${websiteId}',
+    token: '${token}',
+    primaryColor: '${config.primaryColor}',
+    preamble: '${config.preamble}',
+    host: window.location.origin
+  };
+</script>
+<script src="${window.location.origin}/widget.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   #chatwise-container {
     position: fixed;
@@ -104,40 +116,7 @@ function generateEmbedCode(websiteId: string, token: string, config: WebsiteConf
   #chatwise-container .hidden {
     display: none;
   }
-</style>
-<script>
-  // First, load the Inter font
-  (function() {
-    var link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-  })();
-
-  // Initialize ChatwiseConfig synchronously
-  window.ChatwiseConfig = {
-    websiteId: '${websiteId}',
-    token: '${token}',
-    primaryColor: '${config.primaryColor}',
-    preamble: '${config.preamble}',
-    host: window.location.origin
-  };
-
-  // Load widget script after config is set
-  (function() {
-    console.log('[Chatwise] Initializing with config:', window.ChatwiseConfig);
-    var script = document.createElement('script');
-    script.src = window.location.origin + '/widget.js';
-    script.async = true;
-    script.onerror = function(error) {
-      console.error('[Chatwise] Failed to load widget script:', error);
-    };
-    script.onload = function() {
-      console.log('[Chatwise] Widget script loaded successfully');
-    };
-    document.head.appendChild(script);
-  })();
-</script>`;
+</style>`;
 }
 
 export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
