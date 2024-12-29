@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
@@ -15,12 +14,28 @@ interface EmbedChatWidgetProps {
 function generateEmbedCode(website: Website) {
   return `<!-- Chatwise Support Widget -->
 <script>
-  window.chatlyConfig = {
-    websiteId: '${website.id}',
-    token: '${website.embed_token}'
-  };
-</script>
-<script src="https://simplesupportbot.com/widget.js" async></script>`;
+  (function() {
+    // Initialize widget configuration
+    window.ChatwiseWidget = {
+      websiteId: '${website.id}',
+      token: '${website.embed_token}',
+      config: ${JSON.stringify(website.config)},
+      host: 'https://simplesupportbot.com'
+    };
+
+    // Load widget script
+    var script = document.createElement('script');
+    script.src = 'https://simplesupportbot.com/widget.js';
+    script.async = true;
+    document.head.appendChild(script);
+
+    // Load widget styles
+    var link = document.createElement('link');
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  })();
+</script>`;
 }
 
 export function EmbedChatWidget({ website }: EmbedChatWidgetProps) {

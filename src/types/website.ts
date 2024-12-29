@@ -5,6 +5,10 @@ export interface WebsiteConfig {
 
 export interface Website {
   id: string;
-  token: string;
+  name: string;
+  user_id: string;
+  embed_token: string;
   config: WebsiteConfig;
+  created_at: string;
+  updated_at: string;
 }

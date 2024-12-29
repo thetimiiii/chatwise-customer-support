@@ -1,6 +1,6 @@
 (function() {
-    if (!window.chatlyConfig) {
-        console.error('chatlyConfig not found');
+    if (!window.ChatwiseWidget) {
+        console.error('ChatwiseWidget configuration not found');
         return;
     }
 
@@ -13,37 +13,14 @@
 
             this.websiteId = config.websiteId;
             this.token = config.token;
+            this.config = config.config;
+            this.host = config.host;
             
-            // Create Supabase client
-            this.supabase = supabase.createClient(
-                'https://simplesupportbot.com',
-                'your-anon-key'
-            );
-
-            this.initWidget();
-        }
-
-        async initWidget() {
-            try {
-                // Load website config from Supabase
-                const { data: website, error } = await this.supabase
-                    .from('websites')
-                    .select('config')
-                    .eq('id', this.websiteId)
-                    .single();
-
-                if (error) throw error;
-
-                this.config = website.config;
-                this.render();
-                this.attachEventListeners();
-            } catch (error) {
-                console.error('Failed to initialize widget:', error);
-            }
+            this.render();
+            this.attachEventListeners();
         }
 
         render() {
-            // Create container if it doesn't exist
             let container = document.getElementById('chatwise-container');
             if (!container) {
                 container = document.createElement('div');
@@ -90,7 +67,7 @@
                     bottom: 20px;
                     right: 20px;
                     z-index: 1000;
-                    font-family: system-ui, -apple-system, sans-serif;
+                    font-family: 'Inter', sans-serif;
                 }
                 .chat-button {
                     width: 60px;
@@ -204,7 +181,7 @@
                 messagesContainer.appendChild(userMessageDiv);
 
                 try {
-                    const response = await fetch('https://simplesupportbot.com/api/chat', {
+                    const response = await fetch(`${this.host}/api/chat`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -244,9 +221,6 @@
         }
     }
 
-    // Load Supabase client
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-    script.onload = () => new ChatWidget(window.chatlyConfig);
-    document.head.appendChild(script);
+    // Initialize widget
+    new ChatWidget(window.ChatwiseWidget);
 })();
