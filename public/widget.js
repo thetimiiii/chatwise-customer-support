@@ -35,13 +35,15 @@
 
         async loadStyles() {
             try {
-                const response = await fetch(`${this.host}/api/chat/widget-styles`, {
+                // Add cache-busting query parameter to prevent redirect caching
+                const response = await fetch(`${this.host}/api/chat/widget-styles?t=${Date.now()}`, {
+                    method: 'GET',
                     headers: {
                         'Accept': 'text/javascript',
                         'Authorization': `Bearer ${this.token}`
                     },
                     mode: 'cors',
-                    credentials: 'same-origin'
+                    credentials: 'omit' // Change to omit for cross-origin requests
                 });
 
                 if (!response.ok) {
@@ -222,24 +224,10 @@
                 `).join('');
 
                 try {
-                    const response = await fetch(`${this.host}/api/chat`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${this.token}`
-                        },
-                        body: JSON.stringify({
-                            message,
-                            websiteId: this.websiteId
-                        })
-                    });
-
-                    if (!response.ok) throw new Error('Failed to get response');
-
-                    const data = await response.json();
+                    const response = await this.sendMessage(message);
                     
                     // Add bot response
-                    this.messages.push({ content: data.response, isUser: false });
+                    this.messages.push({ content: response, isUser: false });
                     messagesContainer.innerHTML = this.messages.map(msg => `
                         <div class="message ${msg.isUser ? 'user-message' : 'bot-message'}">
                             ${msg.content}
@@ -268,6 +256,36 @@
                     sendMessage();
                 }
             });
+        }
+
+        async sendMessage(message) {
+            try {
+                const response = await fetch(`${this.host}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.token}`
+                    },
+                    mode: 'cors',
+                    credentials: 'omit',
+                    body: JSON.stringify({
+                        message,
+                        websiteId: this.websiteId,
+                        token: this.token,
+                        config: this.config
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Chat error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                return data.response;
+            } catch (error) {
+                console.error('Chat error:', error);
+                throw error;
+            }
         }
     }
 
