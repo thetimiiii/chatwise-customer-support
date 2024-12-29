@@ -2,9 +2,13 @@
     console.log('[Debug] widget.js starting execution');
     console.log('[Debug] Current ChatwiseConfig:', window.ChatwiseConfig);
     
-    // Simple check for ChatwiseConfig
-    if (!window.ChatwiseConfig) {
-        console.error('[Debug] ChatwiseConfig not found. Make sure to include the config script before widget.js');
+    // Try to get config multiple ways
+    var config = window.ChatwiseConfig || 
+                 window['ChatwiseConfig'] || 
+                 document.defaultView.ChatwiseConfig;
+                 
+    if (!config) {
+        console.error('ChatwiseConfig not found. Make sure to include the config script before widget.js');
         return;
     }
 
@@ -178,5 +182,5 @@
     }
 
     // Initialize immediately since we know config exists
-    new ChatWidget(window.ChatwiseConfig);
+    new ChatWidget(config);
 })();

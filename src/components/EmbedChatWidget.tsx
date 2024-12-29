@@ -24,9 +24,7 @@ function generateEmbedCode(websiteId: string, token: string, config: WebsiteConf
   return `<!-- Chatwise Support Widget -->
 <div id="chatwise-container"></div>
 <script>
-  console.log('[Debug 1] Before setting config');
-  
-  // Define ChatwiseConfig as a global variable
+  // First define the config
   var ChatwiseConfig = {
     websiteId: '${websiteId}',
     token: '${token}',
@@ -35,16 +33,27 @@ function generateEmbedCode(websiteId: string, token: string, config: WebsiteConf
     host: 'https://simplesupportbot.com'
   };
   
-  // Explicitly set it on window
-  window.ChatwiseConfig = ChatwiseConfig;
-  
-  console.log('[Debug 2] After setting config:', window.ChatwiseConfig);
+  // Then set it globally
+  Object.defineProperty(window, 'ChatwiseConfig', {
+    value: ChatwiseConfig,
+    writable: false,
+    configurable: false
+  });
 </script>
-<script 
-  src="https://simplesupportbot.com/widget.js" 
-  onload="console.log('[Debug 3] widget.js loaded')" 
-  onerror="console.error('[Debug 3] Failed to load widget.js')"
-></script>
+
+<!-- Load widget after config is definitely set -->
+<script defer>
+  // Double check config exists
+  if (!window.ChatwiseConfig) {
+    throw new Error('Config not set!');
+  }
+  
+  // Then load widget
+  var script = document.createElement('script');
+  script.src = 'https://simplesupportbot.com/widget.js';
+  document.head.appendChild(script);
+</script>
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   #chatwise-container {
