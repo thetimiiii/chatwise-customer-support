@@ -15,15 +15,19 @@ function corsHeaders() {
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
-    headers: corsHeaders(),
+    headers: {
+      ...corsHeaders(),
+      'Content-Length': '0',
+      'Connection': 'keep-alive'
+    }
   });
 }
 
 export async function POST(request: Request) {
-  try {
-    // Add CORS headers to all responses
-    const headers = corsHeaders();
+  // Add CORS headers to all responses
+  const headers = corsHeaders();
 
+  try {
     const { websiteId, message, token, config } = await request.json();
 
     // Validate request
@@ -110,12 +114,27 @@ export async function POST(request: Request) {
       console.error('Error saving messages:', { saveUserMsgError, saveAiMsgError });
     }
 
-    return NextResponse.json({ message: aiResponse }, { headers });
+    return new NextResponse(
+      JSON.stringify({ message: aiResponse }),
+      { 
+        status: 200,
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
   } catch (error) {
     console.error('Chat API error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500, headers: corsHeaders() }
+    return new NextResponse(
+      JSON.stringify({ error: 'Internal server error' }),
+      { 
+        status: 500,
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        }
+      }
     );
   }
 }

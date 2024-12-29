@@ -27,6 +27,8 @@
       justify-content: center;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       transition: transform 0.2s;
+      position: relative;
+      z-index: 1000000;
     }
     .chatwise-widget-button:hover {
       transform: scale(1.05);
@@ -38,17 +40,40 @@
     }
     .chatwise-widget-container {
       position: fixed;
-      bottom: 20px;
+      bottom: 80px;
       right: 20px;
       width: 350px;
-      height: 500px;
+      height: calc(100vh - 120px);
+      max-height: 600px;
+      min-height: 400px;
       background: white;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
       display: flex;
       flex-direction: column;
       overflow: hidden;
       border: 1px solid #e5e7eb;
+      z-index: 999999;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .chatwise-widget-container.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    @media (max-height: 700px) {
+      .chatwise-widget-container {
+        height: calc(100vh - 100px);
+        bottom: 70px;
+      }
+    }
+    @media (max-width: 480px) {
+      .chatwise-widget-container {
+        width: calc(100vw - 40px);
+        height: calc(100vh - 100px);
+        bottom: 70px;
+      }
     }
     .chatwise-widget-header {
       padding: 16px;
@@ -56,6 +81,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      background: white;
     }
     .chatwise-widget-title {
       font-weight: 600;
@@ -72,6 +98,7 @@
       align-items: center;
       justify-content: center;
       color: #6b7280;
+      transition: color 0.2s;
     }
     .chatwise-widget-close:hover {
       color: #1f2937;
@@ -83,6 +110,7 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
+      background: white;
     }
     .chatwise-message {
       max-width: 85%;
@@ -90,6 +118,18 @@
       border-radius: 8px;
       font-size: 14px;
       line-height: 1.5;
+      word-wrap: break-word;
+      animation: message-fade-in 0.3s ease;
+    }
+    @keyframes message-fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     .chatwise-message.user {
       margin-left: auto;
@@ -108,6 +148,7 @@
       border-top: 1px solid #e5e7eb;
       display: flex;
       gap: 8px;
+      background: white;
     }
     .chatwise-widget-input input {
       flex: 1;
@@ -116,6 +157,7 @@
       border-radius: 6px;
       font-size: 14px;
       outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
     .chatwise-widget-input input:focus {
       border-color: var(--primary-color, #2563eb);
@@ -132,7 +174,10 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: opacity 0.2s;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    .chatwise-widget-input button:not(:disabled):hover {
+      transform: scale(1.05);
     }
     .chatwise-widget-input button:disabled {
       opacity: 0.7;
@@ -202,8 +247,9 @@
 
   // Send message to API
   async function sendMessage(message) {
+    const apiUrl = new URL('/api/chat', host);
     try {
-      const response = await fetch(`${host}/api/chat`, {
+      const response = await fetch(apiUrl.toString(), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -220,7 +266,8 @@
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
@@ -256,13 +303,17 @@
   // Event listeners
   toggleButton.addEventListener('click', () => {
     container.style.display = 'flex';
+    setTimeout(() => container.classList.add('visible'), 10);
     toggleButton.parentElement.style.display = 'none';
     input.focus();
   });
 
   closeButton.addEventListener('click', () => {
-    container.style.display = 'none';
-    toggleButton.parentElement.style.display = 'block';
+    container.classList.remove('visible');
+    setTimeout(() => {
+      container.style.display = 'none';
+      toggleButton.parentElement.style.display = 'block';
+    }, 300);
   });
 
   input.addEventListener('input', () => {
