@@ -21,45 +21,35 @@ export function EmbedChatWidget({ websiteId, token }: EmbedChatWidgetProps) {
   const [copied, setCopied] = useState(false);
 
   const generateEmbedCode = () => {
-    return `<!-- Chatwise Support Widget -->
+    return `<!-- Add the container div -->
+<div id="chatwise-container"></div>
+
+<!-- Initialize the widget -->
 <script>
-  (function() {
-    // Initialize widget configuration
+    // Initialize configuration
     window.ChatwiseConfig = {
-      websiteId: '${websiteId}',
-      token: '${token}',
-      primaryColor: '${primaryColor}',
-      preamble: 'You are a helpful customer support agent. Be concise and friendly in your responses.',
-      host: 'https://simplesupportbot.com'
+        websiteId: '${websiteId}',
+        token: '${token}',
+        primaryColor: '${primaryColor}',
+        preamble: 'You are a helpful customer support agent. Be concise and friendly in your responses.',
+        host: 'https://simplesupportbot.com'
     };
 
-    // Load widget script
-    var script = document.createElement('script');
-    script.src = 'https://simplesupportbot.com/widget.js';
-    script.async = true;
-    
-    // Add error handling
-    script.onerror = function() {
-      console.error('Failed to load Chatwise widget script');
-    };
-    
-    // Add load event handler
-    script.onload = function() {
-      console.log('Chatwise widget script loaded successfully');
-    };
-    
-    document.head.appendChild(script);
+    // Load widget resources
+    (function() {
+        // Load styles
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://simplesupportbot.com/css/styles.css';
+        document.head.appendChild(link);
 
-    // Load widget styles
-    var link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-  })();
-</script>
-
-<!-- Add this container div before the closing </body> tag -->
-<div id="chatwise-container"></div>`;
+        // Load widget script
+        const script = document.createElement('script');
+        script.src = 'https://simplesupportbot.com/widget.js';
+        script.async = true;
+        document.head.appendChild(script);
+    })();
+</script>`;
   };
 
   const copyToClipboard = async () => {
