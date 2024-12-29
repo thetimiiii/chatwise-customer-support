@@ -1,26 +1,24 @@
 (function() {
-    console.log('[Debug] widget.js starting execution');
-    console.log('[Debug] Current ChatwiseConfig:', window.ChatwiseConfig);
-    
-    // Try to get config multiple ways
-    var config = window.ChatwiseConfig || 
-                 window['ChatwiseConfig'] || 
-                 document.defaultView.ChatwiseConfig;
-                 
-    if (!config) {
+    // Simple check for ChatwiseConfig
+    if (!window.ChatwiseConfig) {
         console.error('ChatwiseConfig not found. Make sure to include the config script before widget.js');
         return;
     }
 
-    console.log('[Debug] Found ChatwiseConfig, initializing widget...');
     class ChatWidget {
         constructor(config) {
+            // Validate required config
+            if (!config.websiteId || !config.token) {
+                console.error('Missing required configuration: websiteId and token are required');
+                return;
+            }
+
             this.config = {
                 primaryColor: config.primaryColor || '#2563eb',
                 preamble: config.preamble || 'How can I help you today?',
                 websiteId: config.websiteId,
                 token: config.token,
-                host: config.host
+                host: config.host || 'https://simplesupportbot.com'
             };
 
             this.isOpen = false;
@@ -31,9 +29,30 @@
         }
 
         async initialize() {
-            this.render();
-            this.attachEventListeners();
-            await this.loadInitialMessage();
+            try {
+                // Verify API token first
+                const response = await fetch(`${this.config.host}/api/chat/verify`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${this.config.token}`
+                    },
+                    body: JSON.stringify({
+                        websiteId: this.config.websiteId
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to verify widget configuration');
+                }
+
+                // If verification successful, render widget
+                this.render();
+                this.attachEventListeners();
+                await this.loadInitialMessage();
+            } catch (error) {
+                console.error('Failed to initialize widget:', error);
+            }
         }
 
         async loadInitialMessage() {
@@ -154,11 +173,7 @@
                     body: JSON.stringify({
                         message,
                         websiteId: this.config.websiteId,
-                        token: this.config.token,
-                        config: {
-                            primaryColor: this.config.primaryColor,
-                            preamble: this.config.preamble
-                        }
+                        token: this.config.token
                     })
                 });
 
@@ -181,6 +196,6 @@
         }
     }
 
-    // Initialize immediately since we know config exists
-    new ChatWidget(config);
+    // Initialize widget with config
+    new ChatWidget(window.ChatwiseConfig);
 })();

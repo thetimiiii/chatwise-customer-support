@@ -24,35 +24,17 @@ function generateEmbedCode(websiteId: string, token: string, config: WebsiteConf
   return `<!-- Chatwise Support Widget -->
 <div id="chatwise-container"></div>
 <script>
-  // First define the config
-  var ChatwiseConfig = {
+  // Initialize ChatwiseConfig with secure token
+  window.ChatwiseConfig = {
     websiteId: '${websiteId}',
     token: '${token}',
     primaryColor: '${config.primaryColor}',
     preamble: '${config.preamble}',
     host: 'https://simplesupportbot.com'
   };
-  
-  // Then set it globally
-  Object.defineProperty(window, 'ChatwiseConfig', {
-    value: ChatwiseConfig,
-    writable: false,
-    configurable: false
-  });
 </script>
 
-<!-- Load widget after config is definitely set -->
-<script defer>
-  // Double check config exists
-  if (!window.ChatwiseConfig) {
-    throw new Error('Config not set!');
-  }
-  
-  // Then load widget
-  var script = document.createElement('script');
-  script.src = 'https://simplesupportbot.com/widget.js';
-  document.head.appendChild(script);
-</script>
+<script src="https://simplesupportbot.com/widget.js"></script>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
