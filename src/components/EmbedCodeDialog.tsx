@@ -1,71 +1,71 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { Website } from "@/integrations/supabase/types/website";
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://simplesupportbot.com";
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { useToast } from "@/hooks/use-toast"
+import type { Website } from "@/integrations/supabase/types/website"
 
 interface EmbedCodeDialogProps {
-  website: Website;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  website: Website
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 export const EmbedCodeDialog = ({ website, open, onOpenChange }: EmbedCodeDialogProps) => {
   const { toast } = useToast();
 
-  const embedCode = `<!-- Chatwise Support Widget -->
+  const embedCode = `<!-- Chatwise Widget -->
 <script>
-  (function() {
-    // Initialize widget configuration
-    window.ChatwiseWidget = {
-      websiteId: '${website.id}',
-      token: '${website.embed_token}',
-      config: ${JSON.stringify(website.config || {
-        primaryColor: '#2563eb',
-        preamble: "You are a helpful customer support agent. Be concise and friendly in your responses."
-      })},
-      host: '${APP_URL}'
-    };
+  window.ChatwiseWidget = {
+    websiteId: "${website.id}",
+    token: "${website.embed_token}",
+    config: ${JSON.stringify(website.config, null, 2)},
+    host: "${process.env.NEXT_PUBLIC_APP_URL || 'https://simplesupportbot.com'}"
+  };
+</script>
+<script async src="${process.env.NEXT_PUBLIC_APP_URL || 'https://simplesupportbot.com'}/widget.js"></script>`;
 
-    // Load widget script
-    var script = document.createElement('script');
-    script.src = '${APP_URL}/widget.js';
-    script.async = true;
-    document.head.appendChild(script);
-
-    // Load widget styles
-    var link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
-  })();
-</script>`;
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(embedCode);
-    toast({
-      title: "Copied!",
-      description: "Embed code copied to clipboard",
-    });
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(embedCode);
+      toast({
+        title: "Copied!",
+        description: "Widget code copied to clipboard.",
+      });
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      toast({
+        title: "Error",
+        description: "Failed to copy code to clipboard.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="sm:max-w-[625px]">
         <DialogHeader>
-          <DialogTitle>Embed Code for {website.name}</DialogTitle>
+          <DialogTitle>Embed Chat Widget</DialogTitle>
+          <DialogDescription>
+            Copy this code and paste it into your website where you want the chat widget to appear.
+          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="bg-muted p-4 rounded-lg">
-            <pre className="whitespace-pre-wrap text-sm">
-              <code>{embedCode}</code>
-            </pre>
-          </div>
-          <Button onClick={copyToClipboard} className="w-full">
-            Copy Embed Code
-          </Button>
+        <div className="grid gap-4 py-4">
+          <pre className="bg-secondary p-4 rounded-lg overflow-auto max-h-[300px] text-sm">
+            <code>{embedCode}</code>
+          </pre>
         </div>
+        <DialogFooter>
+          <Button onClick={copyToClipboard}>
+            Copy Code
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
