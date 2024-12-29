@@ -29,51 +29,37 @@ export const EmbedCodeGenerator = ({ websiteId }: { websiteId: string }) => {
         return;
       }
 
-      const code = `<!-- Chatwise Widget -->
+      const code = `<!-- Chatwise Support Widget -->
 <script>
   window.ChatwiseWidget = {
-    websiteId: "${websiteId}",
-    token: "${website.embed_token}",
-    config: ${JSON.stringify(website.config, null, 2)},
-    host: "${APP_URL}"
+    websiteId: '${websiteId}',
+    token: '${website.embed_token}',
+    config: ${JSON.stringify(website.config || {})},
+    host: '${APP_URL}'
   };
 </script>
 <script async src="${APP_URL}/widget.js"></script>`;
-
+      
       setEmbedCode(code);
     };
 
     fetchEmbedToken();
   }, [websiteId, toast]);
 
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(embedCode);
-      toast({
-        title: "Copied!",
-        description: "Widget code copied to clipboard.",
-      });
-    } catch (error) {
-      console.error('Failed to copy:', error);
-      toast({
-        title: "Error",
-        description: "Failed to copy code to clipboard.",
-        variant: "destructive",
-      });
-    }
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(embedCode);
+    toast({
+      title: "Copied!",
+      description: "Embed code copied to clipboard",
+    });
   };
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-2">
-        <Label>Embed Code</Label>
-        <pre className="bg-secondary p-4 rounded-lg overflow-auto max-h-[300px] text-sm">
-          <code>{embedCode}</code>
-        </pre>
+      <div className="bg-muted p-4 rounded-lg">
+        <pre className="whitespace-pre-wrap text-sm">{embedCode}</pre>
       </div>
-      <Button onClick={copyToClipboard}>
-        Copy Code
-      </Button>
+      <Button onClick={copyToClipboard}>Copy Embed Code</Button>
     </div>
   );
 };
