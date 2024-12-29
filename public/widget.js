@@ -35,15 +35,16 @@
 
         async loadStyles() {
             try {
-                // Add cache-busting query parameter to prevent redirect caching
-                const response = await fetch(`${this.host}/api/chat/widget-styles?t=${Date.now()}`, {
+                const styleUrl = `${this.host}/api/chat/widget-styles`;
+                const response = await fetch(styleUrl, {
                     method: 'GET',
                     headers: {
-                        'Accept': 'text/javascript',
+                        'Accept': 'text/javascript, */*',
                         'Authorization': `Bearer ${this.token}`
                     },
                     mode: 'cors',
-                    credentials: 'omit' // Change to omit for cross-origin requests
+                    credentials: 'include',
+                    cache: 'force-cache'
                 });
 
                 if (!response.ok) {
